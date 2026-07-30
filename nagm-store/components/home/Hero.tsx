@@ -1,203 +1,139 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ShoppingCart } from "lucide-react";
+import { ShoppingBag, Car, ShieldCheck, Truck, Star, ArrowRight } from "lucide-react";
+import { useVehicle } from "@/context/VehicleContext";
 
 export default function Hero() {
+  const { setIsVehicleModalOpen } = useVehicle();
+
   return (
-    <section className="relative overflow-hidden bg-[#030712]">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#030712] via-[#111827] to-[#030712]" />
+    <section className="relative overflow-hidden bg-[#0A0A0A] pt-32 pb-20 lg:pt-36 lg:pb-28">
+      {/* Background Decorative Glows */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[#8B3A2E]/15 blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 right-10 h-[350px] w-[350px] rounded-full bg-[#D4A017]/10 blur-[130px] pointer-events-none" />
 
-      {/* Decorative Glows */}
-      <div className="absolute -left-32 top-16 h-72 w-72 rounded-full bg-red-600/10 blur-[120px]" />
-      <div className="absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 rounded-full bg-red-600/10 blur-[140px]" />
-      <div className="absolute bottom-0 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-red-500/5 blur-[100px]" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
-      <div
-        className="
-          relative
-          mx-auto
-          flex
-          min-h-screen
-          max-w-7xl
-          flex-col-reverse
-          items-center
-          justify-center
-          gap-14
-
-          px-6
-          pt-32
-          pb-16
-
-          sm:px-8
-          sm:pt-28
-          sm:pb-20
-
-          md:gap-16
-
-          lg:flex-row
-          lg:justify-between
-          lg:items-center
-          lg:px-8
-          lg:pt-20
-          lg:pb-20
-
-          xl:px-12
-          2xl:max-w-[1500px]
-        "
-      >
-        {/* ================= LEFT CONTENT ================= */}
-
-        <motion.div
-          initial={{ opacity: 0, x: -70 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex-1 text-center lg:text-left"
-        >
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.4em] text-red-500 sm:text-sm">
-            NEGM STORE
-          </p>
-
-          <h1
-            className="
-              font-extrabold
-              leading-tight
-              text-white
-
-              text-4xl
-              sm:text-5xl
-              md:text-6xl
-              lg:text-6xl
-              xl:text-7xl
-              2xl:text-8xl
-            "
+          {/* Left Hero Text Column */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-7 text-center lg:text-left"
           >
-            Drive With
-            <span className="mt-2 block text-red-500">
-              Confidence.
-            </span>
-          </h1>
-
-          <p
-            className="
-              mx-auto
-              mt-6
-              max-w-xl
-              text-base
-              leading-8
-              text-slate-400
-
-              sm:text-lg
-
-              lg:mx-0
-              lg:max-w-2xl
-            "
-          >
-            Premium spare parts, genuine oils, batteries, filters,
-            lubricants and automotive accessories built for
-            performance, durability and reliability.
-          </p>
-
-          <div
-            className="
-              mt-10
-              flex
-              flex-col
-              gap-4
-
-              sm:flex-row
-              sm:justify-center
-
-              lg:justify-start
-            "
-          >
-            <Button
-              size="lg"
-              className="h-14 rounded-full bg-red-600 px-8 text-base font-semibold transition-all duration-300 hover:scale-105 hover:bg-red-700"
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Shop Now
-            </Button>
-
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 rounded-full border-slate-600 bg-transparent px-8 text-base font-semibold text-white transition-all duration-300 hover:border-red-500 hover:bg-red-600 hover:text-white"
-            >
-              Explore
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Stats */}
-
-          <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/10 pt-8 text-center lg:text-left">
-            <div>
-              <h3 className="text-2xl font-bold text-red-500">
-                10K+
-              </h3>
-              <p className="mt-1 text-sm text-slate-400">
-                Products
-              </p>
+            {/* Top Subtitle Pill */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4A017]/40 bg-[#1B1B1B]/80 px-4 py-1.5 text-xs font-bold text-[#D4A017] mb-6 backdrop-blur-md">
+              <ShieldCheck className="h-4 w-4" />
+              <span>Egypt's #1 Luxury Automotive Spare Parts Hub</span>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-bold text-red-500">
-                500+
-              </h3>
-              <p className="mt-1 text-sm text-slate-400">
-                Brands
-              </p>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+              Engineered For <br className="hidden sm:inline" />
+              <span className="bg-gradient-to-r from-[#D4A017] via-[#f7d774] to-[#D4A017] bg-clip-text text-transparent">
+                Peak Performance.
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-2xl mx-auto lg:mx-0 text-base sm:text-lg text-gray-300 leading-relaxed font-normal">
+              100% Genuine motor oils, ceramic brake pads, OEM filters, batteries, tyres, and car detailing products delivered fast across Cairo, Giza, and all Egyptian Governorates.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <Link
+                href="/shop"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#8B3A2E] px-8 py-4 text-base font-bold text-white shadow-xl transition-all duration-300 hover:bg-[#a34436] hover:shadow-[0_10px_30px_rgba(139,58,46,0.4)] hover:-translate-y-0.5"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                <span>Shop Catalog</span>
+              </Link>
+
+              <button
+                onClick={() => setIsVehicleModalOpen(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#D4A017]/40 bg-[#1B1B1B]/90 px-8 py-4 text-base font-bold text-white transition-all duration-300 hover:border-[#D4A017] hover:bg-[#D4A017]/10 hover:-translate-y-0.5"
+              >
+                <Car className="h-5 w-5 text-[#D4A017]" />
+                <span>Find Parts For My Car</span>
+              </button>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-bold text-red-500">
-                24/7
-              </h3>
-              <p className="mt-1 text-sm text-slate-400">
-                Support
-              </p>
+            {/* Feature Badges */}
+            <div className="mt-12 grid grid-cols-3 gap-4 border-t border-[#2D2D2D] pt-8">
+              <div className="text-center lg:text-left">
+                <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">100%</h4>
+                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Genuine OEM</p>
+              </div>
+              <div className="text-center lg:text-left">
+                <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">24/48h</h4>
+                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Egypt Delivery</p>
+              </div>
+              <div className="text-center lg:text-left">
+                <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">4.9 ★</h4>
+                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Customer Rating</p>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* ================= RIGHT IMAGE ================= */}
-                <motion.div
-  initial={{
-    opacity: 0,
-    x: 400,
-    scale: 0.9,
-    rotate: -3,
-  }}
-  animate={{
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    rotate: 0,
-  }}
-  transition={{
-    duration: 1.3,
-    ease: [0.22, 1, 0.36, 1],
-  }}
-  className="flex flex-1 items-center justify-center lg:justify-end"
->
-  <div className="relative flex w-full items-center justify-center">
-    <div className="absolute h-[260px] w-[260px] rounded-full bg-[#8B3A2E]/20 blur-3xl sm:h-[350px] sm:w-[350px] lg:h-[500px] lg:w-[500px]" />
+          {/* Right Visual Image & Floating Badges */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.2 }}
+            className="lg:col-span-5 relative flex items-center justify-center"
+          >
+            <div className="relative w-full max-w-lg aspect-square">
+              {/* Glossy Backdrop Card */}
+              <div className="absolute inset-0 rounded-3xl border border-[#D4A017]/20 bg-gradient-to-b from-[#1B1B1B]/80 to-[#111111] backdrop-blur-2xl shadow-2xl" />
 
-    <Image
-      src="/images/hero-car.png"
-      alt="Hero Car"
-      width={1600}
-      height={1000}
-      priority
-      className="relative z-10 h-auto w-full max-w-[320px] object-contain drop-shadow-[0_25px_60px_rgba(0,0,0,0.65)] sm:max-w-[420px] md:max-w-[560px] lg:max-w-[700px] xl:max-w-[850px] 2xl:max-w-[950px]"
-    />
-  </div>
-</motion.div>
-        
+              {/* Main Product / Car Image */}
+              <div className="relative z-10 h-full w-full p-6 flex items-center justify-center">
+                <Image
+                  src="https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=800"
+                  alt="Negm Store Automotive Parts"
+                  width={600}
+                  height={600}
+                  priority
+                  className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] rounded-2xl"
+                />
+              </div>
+
+              {/* Floating Glass Pill 1: Top Right */}
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-4 -right-4 z-20 flex items-center gap-3 rounded-2xl border border-[#D4A017]/30 bg-[#1B1B1B]/95 p-3.5 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8B3A2E] text-white">
+                  <Truck className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Fast Egypt Delivery</div>
+                  <div className="text-[11px] text-[#D4A017]">Free Over 2000 EGP</div>
+                </div>
+              </motion.div>
+
+              {/* Floating Glass Pill 2: Bottom Left */}
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -bottom-4 -left-4 z-20 flex items-center gap-3 rounded-2xl border border-[#D4A017]/30 bg-[#1B1B1B]/95 p-3.5 shadow-2xl backdrop-blur-xl"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D4A017] text-black">
+                  <Star className="h-5 w-5 fill-current" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Mobil 1 & Shell</div>
+                  <div className="text-[11px] text-emerald-400">Authorized Stockist</div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+        </div>
       </div>
     </section>
   );

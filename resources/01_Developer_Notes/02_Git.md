@@ -484,3 +484,395 @@ Today I learned:
 - The Staging Area prepares files for commit.
 - A commit creates a snapshot.
 - GitHub stores my repository online.
+
+---
+
+
+
+# 📅 Day 3 - Git Repository, Staging, Commit & GitHub
+
+---
+
+# 1. Git Configuration
+
+## Commands
+
+```bash
+git config --global user.name "Your Name"
+
+git config --global user.email "your@email.com"
+```
+
+## Verify
+
+```bash
+git config --global user.name
+
+git config --global user.email
+```
+
+### Important Points
+
+* Git stores the author's name and email.
+* Every commit records:
+
+  * Author
+  * Email
+  * Date & Time
+  * Commit Message
+* `--global` means the configuration applies to all Git repositories on your computer.
+* Configure Git only once per computer.
+
+---
+
+# 2. Git Repository
+
+## Command
+
+```bash
+git init
+```
+
+### Important Points
+
+* Initializes a Git repository.
+* Creates a hidden `.git` folder.
+* `.git` stores:
+
+  * Commit history
+  * Branches
+  * Configuration
+  * References
+  * Objects
+* After `git init`, Git starts tracking the project.
+
+---
+
+# Steps to Initialize a Git Repository
+
+### Step 1
+
+Open the project in VS Code and open the integrated terminal.
+
+Verify you're inside the project:
+
+```bash
+pwd
+```
+
+---
+
+### Step 2
+
+Initialize Git.
+
+```bash
+git init
+```
+
+---
+
+### Step 3
+
+Verify the repository.
+
+```bash
+git status
+```
+
+---
+
+# 3. Working Directory
+
+### Important Points
+
+* The place where you create and edit project files.
+* Changes are **not** part of Git history yet.
+
+---
+
+# 4. Staging Area
+
+## Command
+
+```bash
+git add
+```
+
+### Important Points
+
+* Temporary area before committing.
+* Lets you choose which files should be included in the next commit.
+* Only staged files are committed.
+
+---
+
+# 5. Git Status
+
+## Command
+
+```bash
+git status
+```
+
+### Important Points
+
+Shows:
+
+* Current branch
+* Staged files
+* Untracked files
+* Modified files
+* Working tree status
+
+---
+
+# 6. Git Add
+
+## Stage One File
+
+```bash
+git add README.md
+```
+
+## Stage Everything
+
+```bash
+git add .
+```
+
+### Important Points
+
+* Moves files from the Working Directory to the Staging Area.
+* `.` means **current directory**.
+
+---
+
+# Git Workflow
+
+```text
+Working Directory
+
+↓
+
+git add
+
+↓
+
+Staging Area
+
+↓
+
+git commit
+
+↓
+
+Git Repository
+```
+
+---
+
+# 7. Git Commit
+
+## Command
+
+```bash
+git commit -m "message"
+```
+
+### Important Points
+
+* Creates a snapshot of staged files.
+* Every commit should represent one meaningful change.
+* `-m` means **message**.
+
+---
+
+# 8. Git Log
+
+## Command
+
+```bash
+git log
+```
+
+### Important Points
+
+Shows:
+
+* Commit Hash
+* Author
+* Date
+* Commit Message
+
+---
+
+# 9. Commit Hash
+
+### Important Points
+
+* Unique identifier for every commit.
+* 40-character SHA-1 hash.
+* Used to identify a specific commit.
+
+---
+
+# 10. HEAD
+
+### Important Points
+
+* Pointer to the current commit.
+* Points to the current branch's latest commit.
+
+Example:
+
+```text
+HEAD → main
+```
+
+---
+
+# 11. Branch
+
+## Check Branch
+
+```bash
+git branch
+```
+
+## Rename Branch
+
+```bash
+git branch -M main
+```
+
+### Important Points
+
+* A branch is an independent line of development.
+* Developers work on branches to avoid affecting the main code.
+* `main` is the primary branch.
+* `-M` forces the rename.
+
+---
+
+# 12. Remote Repository
+
+## Add Remote
+
+```bash
+git remote add origin https://github.com/username/repository.git
+```
+
+## Verify
+
+```bash
+git remote -v
+```
+
+### Important Points
+
+* A remote is a repository hosted on GitHub.
+* `origin` is the default nickname.
+* `-v` means **verbose**.
+
+---
+
+# 13. Push to GitHub
+
+## First Push
+
+```bash
+git push -u origin main
+```
+
+## Future Pushes
+
+```bash
+git push
+```
+
+### Important Points
+
+* Uploads local commits to GitHub.
+* `-u` means **set upstream**.
+* After the first push, Git remembers the remote branch.
+
+---
+
+# Commands Learned Today
+
+```bash
+git config --global user.name
+
+git config --global user.email
+
+git init
+
+git status
+
+git add README.md
+
+git add .
+
+git commit -m "message"
+
+git log
+
+git branch
+
+git branch -M main
+
+git remote add origin <repository-url>
+
+git remote -v
+
+git push -u origin main
+
+git push
+```
+
+---
+
+# Complete Git Workflow
+
+```text
+1. Open Project in VS Code
+
+↓
+
+2. git init
+
+↓
+
+3. git status
+
+↓
+
+4. Make Changes
+
+↓
+
+5. git add
+
+↓
+
+6. git commit -m "message"
+
+↓
+
+7. git log
+
+↓
+
+8. git remote add origin <url>
+
+↓
+
+9. git push -u origin main
+
+↓
+
+10. git push (future commits)
+```
+
+---

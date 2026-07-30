@@ -139,4 +139,4 @@ Today I learned:
 - Why Node.js is important.
 - What npm is.
 - The difference between JavaScript and Node.js.
-- How to verify Node.js installation.
+- How to verify Node.js installation.           
