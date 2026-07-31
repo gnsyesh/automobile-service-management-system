@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Droplet, Settings, Disc, Filter, Zap, Shield, Sparkles, Smartphone, Wrench, CircleDot, Lightbulb, Car, Thermometer, FlaskConical, Hammer } from "lucide-react";
@@ -27,7 +26,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 export default function Categories() {
   return (
-    <section className="py-20 bg-[#111111]">
+    <section className="py-20 bg-slate-50 dark:bg-[#111111] transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
@@ -36,7 +35,7 @@ export default function Categories() {
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
               AUTOMOTIVE SECTIONS
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mt-1">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
               Browse By Category
             </h2>
           </div>
@@ -61,17 +60,17 @@ export default function Categories() {
             >
               <Link
                 href={`/shop?category=${cat.slug}`}
-                className="group relative flex flex-col items-center justify-between rounded-2xl border border-[#2D2D2D] bg-[#1B1B1B]/80 p-5 text-center backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017] hover:bg-[#8B3A2E]/20 hover:-translate-y-1.5 shadow-lg"
+                className="group relative flex flex-col items-center justify-between rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-5 text-center backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017] hover:bg-[#8B3A2E]/10 dark:hover:bg-[#8B3A2E]/20 hover:-translate-y-1.5 shadow-sm hover:shadow-md"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#111111] border border-[#2D2D2D] group-hover:border-[#D4A017] transition-colors">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-[#111111] border border-slate-200 dark:border-[#2D2D2D] group-hover:border-[#D4A017] transition-colors">
                   {iconMap[cat.iconName] || <Wrench className="h-6 w-6 text-[#D4A017]" />}
                 </div>
 
-                <h3 className="mt-4 text-sm font-bold text-white group-hover:text-[#D4A017] transition-colors">
+                <h3 className="mt-4 text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#D4A017] transition-colors">
                   {cat.name}
                 </h3>
 
-                <span className="mt-1 text-[11px] text-gray-500 font-medium">
+                <span className="mt-1 text-[11px] text-slate-500 dark:text-gray-500 font-medium">
                   {cat.subcategories.length} Subcategories
                 </span>
               </Link>

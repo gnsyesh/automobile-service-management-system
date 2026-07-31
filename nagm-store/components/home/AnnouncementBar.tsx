@@ -5,8 +5,8 @@ import { Truck, ShieldCheck, PhoneCall } from "lucide-react";
 
 export default function AnnouncementBar() {
   return (
-    <div className="bg-[#8B3A2E] text-white text-xs font-semibold py-2 px-4 border-b border-[#D4A017]/30">
-      <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-3">
+    <div className="bg-[#8B3A2E] text-white text-xs font-semibold py-2 border-b border-[#D4A017]/30">
+      <div className="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8 xl:px-10 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-6 mx-auto sm:mx-0">
           <div className="flex items-center gap-1.5">
             <Truck className="h-4 w-4 text-[#D4A017]" />

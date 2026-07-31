@@ -10,7 +10,7 @@ export default function BestSellers() {
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
 
   return (
-    <section className="py-20 bg-[#0A0A0A] border-t border-[#2D2D2D]">
+    <section className="py-20 bg-slate-50 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
@@ -18,7 +18,7 @@ export default function BestSellers() {
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017] flex items-center gap-1.5">
               <Award className="h-4 w-4" /> MOST POPULAR IN EGYPT
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mt-1">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
               Top Selling Products
             </h2>
           </div>

@@ -2,14 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
-import { Phone, Mail, MapPin, ShieldCheck, CreditCard } from "lucide-react";
+import { Phone, Mail, MapPin, ShieldCheck } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#2D2D2D] bg-[#0A0A0A] text-gray-400 pt-16 pb-12">
+    <footer className="border-t border-slate-200 dark:border-[#2D2D2D] bg-slate-900 text-slate-300 dark:bg-[#0A0A0A] dark:text-gray-400 pt-16 pb-12 transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#2D2D2D]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800 dark:border-[#2D2D2D]">
           
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
@@ -21,11 +21,11 @@ export default function Footer() {
                 <h2 className="text-xl font-black text-white">
                   NEGM<span className="text-[#D4A017] ml-1">STORE</span>
                 </h2>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400">LUXURY AUTO PARTS</p>
+                <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-gray-400">LUXURY AUTO PARTS</p>
               </div>
             </Link>
 
-            <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
+            <p className="text-xs text-slate-300 dark:text-gray-400 leading-relaxed max-w-sm">
               Negm Store is Egypt's leading premier online destination for genuine automotive spare parts, synthetic engine lubricants, batteries, braking systems, and car care accessories.
             </p>
 
@@ -93,14 +93,14 @@ export default function Footer() {
           <p>© 2026 Negm Store. All Rights Reserved. Built for Automotive Excellence in Egypt.</p>
 
           <div className="flex items-center gap-3">
-            <span className="text-gray-500 font-medium">Payment Methods:</span>
-            <div className="flex items-center gap-2 text-white font-bold bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-[#2D2D2D]">
+            <span className="text-slate-400 dark:text-gray-500 font-medium">Payment Methods:</span>
+            <div className="flex items-center gap-2 text-white font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
               <span>Cash on Delivery</span>
             </div>
-            <div className="flex items-center gap-2 text-[#D4A017] font-bold bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-[#2D2D2D]">
+            <div className="flex items-center gap-2 text-[#D4A017] font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
               <span>Visa / Mastercard</span>
             </div>
-            <div className="flex items-center gap-2 text-red-400 font-bold bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-[#2D2D2D]">
+            <div className="flex items-center gap-2 text-red-400 font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
               <span>Vodafone Cash</span>
             </div>
           </div>

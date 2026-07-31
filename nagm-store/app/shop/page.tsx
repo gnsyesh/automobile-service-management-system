@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
@@ -13,20 +13,16 @@ import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car, Check, C
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category") || "all";
-  const initialBrand = searchParams.get("brand") || "all";
-  const initialSearch = searchParams.get("search") || "";
-  const initialCompatible = searchParams.get("compatible") === "true";
 
   const { selectedVehicle, isCompatible, setIsVehicleModalOpen } = useVehicle();
 
   // Filter States
-  const [categoryFilter, setCategoryFilter] = useState<string>(initialCategory);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrand !== "all" ? [initialBrand] : []);
-  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
-  const [onlyCompatible, setOnlyCompatible] = useState<boolean>(initialCompatible);
+  const [onlyCompatible, setOnlyCompatible] = useState<boolean>(false);
   const [minRating, setMinRating] = useState<number>(0);
   const [sortOption, setSortOption] = useState<string>("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -35,6 +31,24 @@ function ShopContent() {
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 12;
+
+  // Synchronize state with URL parameters whenever URL searchParams change
+  useEffect(() => {
+    const cat = searchParams.get("category") || "all";
+    const brd = searchParams.get("brand") || "all";
+    const srch = searchParams.get("search") || "";
+    const comp = searchParams.get("compatible") === "true";
+
+    setCategoryFilter(cat);
+    if (brd !== "all") {
+      setSelectedBrands([brd]);
+    } else {
+      setSelectedBrands([]);
+    }
+    setSearchQuery(srch);
+    setOnlyCompatible(comp);
+    setCurrentPage(1);
+  }, [searchParams]);
 
   // Filter Logic
   const filteredProducts = useMemo(() => {
@@ -46,12 +60,16 @@ function ShopContent() {
         const matchesBrand = p.brand.toLowerCase().includes(q);
         const matchesSku = p.sku.toLowerCase().includes(q);
         const matchesCategory = p.category.toLowerCase().includes(q);
-        if (!matchesName && !matchesBrand && !matchesSku && !matchesCategory) return false;
+        const matchesSubcat = p.subcategory.toLowerCase().includes(q);
+        if (!matchesName && !matchesBrand && !matchesSku && !matchesCategory && !matchesSubcat) return false;
       }
 
       // Category
-      if (categoryFilter !== "all" && p.category !== categoryFilter) {
-        return false;
+      if (categoryFilter !== "all") {
+        const targetCat = categoryFilter.toLowerCase();
+        const matchesCat = p.category.toLowerCase() === targetCat;
+        const matchesSub = p.subcategory.toLowerCase() === targetCat;
+        if (!matchesCat && !matchesSub) return false;
       }
 
       // Brand
@@ -101,7 +119,7 @@ function ShopContent() {
   }, [filteredProducts, sortOption]);
 
   // Pagination Slice
-  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / itemsPerPage));
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return sortedProducts.slice(start, start + itemsPerPage);
@@ -128,6 +146,8 @@ function ShopContent() {
     setCurrentPage(1);
   };
 
+  const currentCategoryObj = categories.find((c) => c.slug === categoryFilter);
+
   return (
     <main className="min-h-screen bg-[#111111] text-gray-100 flex flex-col pt-32 pb-20">
       <Navbar />
@@ -141,7 +161,7 @@ function ShopContent() {
               LUXURY SPARE PARTS CATALOG
             </span>
             <h1 className="text-3xl sm:text-4xl font-black text-white mt-1">
-              Shop Automotive Products
+              {currentCategoryObj ? currentCategoryObj.name : "Shop Automotive Products"}
             </h1>
             <p className="text-xs text-gray-400 mt-1">
               Showing {sortedProducts.length} authentic parts and fluids across Egypt
@@ -269,7 +289,7 @@ function ShopContent() {
               {/* Category Filter */}
               <div>
                 <h4 className="text-xs font-bold uppercase text-gray-400 mb-3">Categories</h4>
-                <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+                <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
                   <button
                     onClick={() => {
                       setCategoryFilter("all");
@@ -283,7 +303,8 @@ function ShopContent() {
                     <span className="text-[10px] opacity-70">{products.length}</span>
                   </button>
                   {categories.map((cat) => {
-                    const count = products.filter((p) => p.category === cat.slug).length;
+                    const isSelected = categoryFilter === cat.slug;
+                    const count = products.filter((p) => p.category === cat.slug || p.subcategory === cat.slug).length;
                     return (
                       <button
                         key={cat.id}
@@ -292,11 +313,11 @@ function ShopContent() {
                           setCurrentPage(1);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                          categoryFilter === cat.slug ? "bg-[#8B3A2E] text-white" : "text-gray-300 hover:bg-[#252525]"
+                          isSelected ? "bg-[#8B3A2E] text-white shadow-md" : "text-gray-300 hover:bg-[#252525]"
                         }`}
                       >
-                        <span>{cat.name}</span>
-                        <span className="text-[10px] opacity-70">{count}</span>
+                        <span className="truncate">{cat.name}</span>
+                        <span className="text-[10px] opacity-70 ml-2 shrink-0">{count}</span>
                       </button>
                     );
                   })}

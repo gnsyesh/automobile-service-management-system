@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import ProductCard from "@/components/common/ProductCard";
 import { products } from "@/data/products";
@@ -23,7 +22,7 @@ export default function FeaturedProducts() {
     : products.filter((p) => p.category === activeTab).slice(0, 8);
 
   return (
-    <section className="py-20 bg-[#0A0A0A] border-t border-[#2D2D2D]">
+    <section className="py-20 bg-slate-100 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
@@ -32,7 +31,7 @@ export default function FeaturedProducts() {
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017] flex items-center gap-1.5">
               <Sparkles className="h-4 w-4" /> HANDPICKED PERFORMANCE
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mt-1">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
               Featured Spare Parts & Fluids
             </h2>
           </div>
@@ -46,7 +45,7 @@ export default function FeaturedProducts() {
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   activeTab === tab.id
                     ? "bg-[#8B3A2E] text-white shadow-lg border border-[#D4A017]/50"
-                    : "bg-[#1B1B1B] text-gray-400 hover:text-white border border-[#2D2D2D]"
+                    : "bg-white dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#2D2D2D]"
                 }`}
               >
                 {tab.name}
@@ -66,7 +65,7 @@ export default function FeaturedProducts() {
         <div className="mt-12 text-center">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 rounded-xl border border-[#D4A017]/40 bg-[#1B1B1B] px-8 py-3.5 text-sm font-bold text-white transition hover:border-[#D4A017] hover:bg-[#8B3A2E] shadow-xl"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] px-8 py-3.5 text-sm font-bold text-slate-900 dark:text-white transition hover:border-[#D4A017] hover:bg-[#8B3A2E] hover:text-white shadow-md"
           >
             <span>Explore All 100+ Automotive Products</span>
             <ArrowRight className="h-4 w-4" />

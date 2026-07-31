@@ -3,17 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingBag, Car, ShieldCheck, Truck, Star, ArrowRight } from "lucide-react";
+import { ShoppingBag, Car, ShieldCheck, Truck, Star } from "lucide-react";
 import { useVehicle } from "@/context/VehicleContext";
 
 export default function Hero() {
   const { setIsVehicleModalOpen } = useVehicle();
 
   return (
-    <section className="relative overflow-hidden bg-[#0A0A0A] pt-32 pb-20 lg:pt-36 lg:pb-28">
+    <section className="relative overflow-hidden bg-slate-950 dark:bg-[#0A0A0A] pt-32 pb-20 lg:pt-36 lg:pb-28 text-white transition-colors duration-300">
       {/* Background Decorative Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[#8B3A2E]/15 blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 right-10 h-[350px] w-[350px] rounded-full bg-[#D4A017]/10 blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[#8B3A2E]/20 blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 right-10 h-[350px] w-[350px] rounded-full bg-[#D4A017]/15 blur-[130px] pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -38,7 +38,7 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="mt-6 max-w-2xl mx-auto lg:mx-0 text-base sm:text-lg text-gray-300 leading-relaxed font-normal">
+            <p className="mt-6 max-w-2xl mx-auto lg:mx-0 text-base sm:text-lg text-slate-300 dark:text-gray-300 leading-relaxed font-normal">
               100% Genuine motor oils, ceramic brake pads, OEM filters, batteries, tyres, and car detailing products delivered fast across Cairo, Giza, and all Egyptian Governorates.
             </p>
 
@@ -62,18 +62,18 @@ export default function Hero() {
             </div>
 
             {/* Feature Badges */}
-            <div className="mt-12 grid grid-cols-3 gap-4 border-t border-[#2D2D2D] pt-8">
+            <div className="mt-12 grid grid-cols-3 gap-4 border-t border-slate-800 dark:border-[#2D2D2D] pt-8">
               <div className="text-center lg:text-left">
                 <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">100%</h4>
-                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Genuine OEM</p>
+                <p className="text-xs text-slate-400 dark:text-gray-400 mt-1 font-semibold uppercase">Genuine OEM</p>
               </div>
               <div className="text-center lg:text-left">
                 <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">24/48h</h4>
-                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Egypt Delivery</p>
+                <p className="text-xs text-slate-400 dark:text-gray-400 mt-1 font-semibold uppercase">Egypt Delivery</p>
               </div>
               <div className="text-center lg:text-left">
                 <h4 className="text-2xl sm:text-3xl font-black text-[#D4A017]">4.9 ★</h4>
-                <p className="text-xs text-gray-400 mt-1 font-semibold uppercase">Customer Rating</p>
+                <p className="text-xs text-slate-400 dark:text-gray-400 mt-1 font-semibold uppercase">Customer Rating</p>
               </div>
             </div>
           </motion.div>
@@ -86,13 +86,11 @@ export default function Hero() {
             className="lg:col-span-5 relative flex items-center justify-center"
           >
             <div className="relative w-full max-w-lg aspect-square">
-              {/* Glossy Backdrop Card */}
               <div className="absolute inset-0 rounded-3xl border border-[#D4A017]/20 bg-gradient-to-b from-[#1B1B1B]/80 to-[#111111] backdrop-blur-2xl shadow-2xl" />
 
-              {/* Main Product / Car Image */}
               <div className="relative z-10 h-full w-full p-6 flex items-center justify-center">
                 <Image
-                  src="https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=800"
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUCZVTkeH4VLa_iCCvsRZrWL_wLImu4IUx42a62Myt3l57YqIyw8pJXc-J&s=10"
                   alt="Negm Store Automotive Parts"
                   width={600}
                   height={600}
@@ -101,7 +99,7 @@ export default function Hero() {
                 />
               </div>
 
-              {/* Floating Glass Pill 1: Top Right */}
+              {/* Floating Glass Pill 1 */}
               <motion.div
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -116,7 +114,7 @@ export default function Hero() {
                 </div>
               </motion.div>
 
-              {/* Floating Glass Pill 2: Bottom Left */}
+              {/* Floating Glass Pill 2 */}
               <motion.div
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}

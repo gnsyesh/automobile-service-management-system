@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Star, Quote, CheckCircle2 } from "lucide-react";
+import { Star, CheckCircle2 } from "lucide-react";
 
 const testimonials = [
   {
@@ -30,14 +30,14 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-20 bg-[#111111] border-t border-[#2D2D2D]">
+    <section className="py-20 bg-slate-100 dark:bg-[#111111] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
             VERIFIED REVIEWS
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-white mt-1">
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
             What Egyptian Drivers Say
           </h2>
         </div>
@@ -50,7 +50,7 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: idx * 0.1 }}
-              className="relative rounded-2xl border border-[#2D2D2D] bg-[#1B1B1B]/80 p-6 backdrop-blur-xl flex flex-col justify-between shadow-xl"
+              className="relative rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-6 backdrop-blur-xl flex flex-col justify-between shadow-sm"
             >
               <div>
                 <div className="flex items-center gap-1 text-[#D4A017] mb-4">
@@ -59,19 +59,19 @@ export default function Testimonials() {
                   ))}
                 </div>
 
-                <p className="text-sm text-gray-300 italic leading-relaxed">
+                <p className="text-sm text-slate-700 dark:text-gray-300 italic leading-relaxed">
                   "{t.comment}"
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-[#2D2D2D] flex items-center justify-between">
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#2D2D2D] flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-white flex items-center gap-1">
-                    {t.name} <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                    {t.name} <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                   </h4>
                   <p className="text-xs text-[#D4A017] font-medium">{t.car}</p>
                 </div>
-                <span className="text-[11px] text-gray-500">{t.location}</span>
+                <span className="text-[11px] text-slate-400 dark:text-gray-500">{t.location}</span>
               </div>
             </motion.div>
           ))}

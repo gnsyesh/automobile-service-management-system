@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Car, Search, ArrowRight } from "lucide-react";
+import { Car, Search } from "lucide-react";
 import { vehicleMakes } from "@/data/vehicles";
 import { useVehicle } from "@/context/VehicleContext";
 
@@ -37,16 +37,16 @@ export default function VehicleSearch() {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="rounded-3xl border border-[#D4A017]/40 bg-[#1B1B1B]/95 p-6 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+        className="rounded-3xl border border-slate-200 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B]/95 p-6 sm:p-8 backdrop-blur-2xl shadow-xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-colors duration-300"
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-[#2D2D2D]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-[#2D2D2D]">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8B3A2E] text-white shadow-lg">
               <Car className="h-6 w-6 text-[#D4A017]" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white">Find Exact Fit Spare Parts</h3>
-              <p className="text-xs text-gray-400">Select your car specifications to filter compatible products</p>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">Find Exact Fit Spare Parts</h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400">Select your car specifications to filter compatible products</p>
             </div>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function VehicleSearch() {
                 setModel("");
                 setYear("");
               }}
-              className="w-full rounded-xl border border-[#2D2D2D] bg-[#111111] px-4 py-3 text-sm text-white focus:border-[#D4A017] focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
             >
               <option value="">-- Choose Make --</option>
               {vehicleMakes.map((m) => (
@@ -87,7 +87,7 @@ export default function VehicleSearch() {
                 setModel(e.target.value);
                 setYear("");
               }}
-              className="w-full rounded-xl border border-[#2D2D2D] bg-[#111111] px-4 py-3 text-sm text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
             >
               <option value="">-- Choose Model --</option>
               {currentMakeObj?.models.map((m) => (
@@ -107,7 +107,7 @@ export default function VehicleSearch() {
               value={year}
               disabled={!model}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="w-full rounded-xl border border-[#2D2D2D] bg-[#111111] px-4 py-3 text-sm text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
             >
               <option value="">-- Choose Year --</option>
               {currentModelObj?.years.map((y) => (

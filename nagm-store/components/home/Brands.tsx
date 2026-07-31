@@ -2,19 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { brands } from "@/data/brands";
 
 export default function Brands() {
   return (
-    <section className="py-16 bg-[#0A0A0A] border-t border-[#2D2D2D] overflow-hidden">
+    <section className="py-16 bg-slate-50 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] overflow-hidden transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         <div className="text-center mb-10">
           <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
             AUTHORIZED DISTRIBUTORS & BRANDS
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-white mt-1">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
             Premium Global Manufacturers
           </h2>
         </div>
@@ -24,12 +23,12 @@ export default function Brands() {
             <Link
               key={brand.id}
               href={`/shop?brand=${brand.slug}`}
-              className="group flex flex-col items-center justify-center p-4 rounded-xl border border-[#2D2D2D] bg-[#1B1B1B]/60 hover:border-[#D4A017] hover:bg-[#1B1B1B] transition-all duration-300 w-36"
+              className="group flex flex-col items-center justify-center p-4 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/60 hover:border-[#D4A017] dark:hover:bg-[#1B1B1B] transition-all duration-300 w-36 shadow-sm"
             >
-              <span className="text-sm font-extrabold text-gray-300 group-hover:text-[#D4A017] transition-colors tracking-tight">
+              <span className="text-sm font-extrabold text-slate-700 dark:text-gray-300 group-hover:text-[#D4A017] transition-colors tracking-tight">
                 {brand.name}
               </span>
-              <span className="text-[10px] text-gray-500 font-medium">{brand.country}</span>
+              <span className="text-[10px] text-slate-500 dark:text-gray-500 font-medium">{brand.country}</span>
             </Link>
           ))}
         </div>
