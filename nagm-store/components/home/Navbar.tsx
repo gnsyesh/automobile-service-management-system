@@ -13,26 +13,17 @@ import {
   ShoppingCart,
   Heart,
   User,
-  Car,
-  ChevronDown,
   Sun,
-  Moon
+  Moon,
+  Globe,
+  Check
 } from "lucide-react";
 import AnnouncementBar from "./AnnouncementBar";
+import LanguageSelector from "@/components/common/LanguageSelector";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { useVehicle } from "@/context/VehicleContext";
-import VehicleSelectorModal from "@/components/common/VehicleSelectorModal";
+import { useLanguage, languages } from "@/context/LanguageContext";
 import { products } from "@/data/products";
-
-const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Shop Parts", href: "/shop" },
-  { name: "Engine Oils", href: "/shop?category=engine-oils" },
-  { name: "Brake System", href: "/shop?category=brake-system" },
-  { name: "Filters", href: "/shop?category=filters" },
-  { name: "Wishlist", href: "/wishlist" },
-];
 
 export default function Navbar() {
   const router = useRouter();
@@ -44,7 +35,7 @@ export default function Navbar() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { itemCount } = useCart();
   const { wishlistCount } = useWishlist();
-  const { selectedVehicle, setIsVehicleModalOpen } = useVehicle();
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -55,6 +46,15 @@ export default function Navbar() {
   const toggleTheme = () => {
     setTheme(isDarkMode ? "light" : "dark");
   };
+
+  const navLinks = [
+    { name: t("nav.home"), href: "/" },
+    { name: t("nav.shop"), href: "/shop" },
+    { name: t("nav.oils"), href: "/shop?category=engine-oils" },
+    { name: t("nav.brakes"), href: "/shop?category=brake-system" },
+    { name: t("nav.filters"), href: "/shop?category=filters" },
+    { name: t("nav.wishlist"), href: "/wishlist" },
+  ];
 
   const searchResults = searchQuery.trim()
     ? products.filter(
@@ -82,17 +82,23 @@ export default function Navbar() {
         <div className="border-b border-slate-200 dark:border-[#2D2D2D] bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl shadow-md transition-colors duration-300">
           <div className="mx-auto flex h-20 max-w-[1800px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 gap-6">
 
-            {/* Left Aligned Logo */}
+            {/* Combined Official Icon + Styled HTML Text Logo */}
             <Link href="/" className="flex items-center gap-3 shrink-0">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#8B3A2E] to-[#5c271e] text-xl font-black text-white shadow-lg border border-[#D4A017]/30">
-                N
+              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#1B1B1B] p-1 border border-[#D4A017]/40 shadow-md">
+                <Image
+                  src="/images/negm-store-logo.png"
+                  alt="Negm Store Official Icon"
+                  fill
+                  priority
+                  className="object-contain p-0.5"
+                />
               </div>
-              <div className="leading-none">
+              <div className="leading-none text-left rtl:text-right">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                   NEGM<span className="ml-1 text-[#D4A017]">STORE</span>
                 </h1>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400 mt-0.5">
-                  LUXURY AUTO PARTS
+                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400 mt-0.5 font-semibold">
+                  {t("nav.tagline")}
                 </p>
               </div>
             </Link>
@@ -113,22 +119,13 @@ export default function Navbar() {
               </ul>
             </nav>
 
-            {/* Right Aligned Action Items & Vehicle Trigger */}
+            {/* Right Aligned Action Icons & Language Selector */}
             <div className="flex items-center gap-3 shrink-0">
               
-              {/* Vehicle Selector Pill Trigger */}
-              <button
-                onClick={() => setIsVehicleModalOpen(true)}
-                className="hidden md:flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-slate-100 dark:bg-[#1B1B1B]/90 px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-white transition-all hover:border-[#D4A017] shadow-sm"
-              >
-                <Car className="h-4 w-4 text-[#D4A017]" />
-                <span className="max-w-[160px] truncate">
-                  {selectedVehicle
-                    ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`
-                    : "Select My Vehicle"}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 text-slate-400 dark:text-gray-400" />
-              </button>
+              {/* Premium Language Selector */}
+              <div className="hidden sm:block">
+                <LanguageSelector />
+              </div>
 
               {/* Sun/Moon Theme Toggle */}
               <button
@@ -221,20 +218,20 @@ export default function Navbar() {
             >
               <div className="mx-auto max-w-4xl">
                 <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-                  <Search className="absolute left-4 h-5 w-5 text-[#D4A017]" />
+                  <Search className="absolute left-4 rtl:left-auto rtl:right-4 h-5 w-5 text-[#D4A017]" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by part name, SKU (e.g. NS-OIL-001), brand (Mobil, Bosch)..."
-                    className="w-full rounded-2xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#1B1B1B] py-3.5 pl-12 pr-24 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:border-[#D4A017] focus:outline-none"
+                    placeholder={t("nav.searchPlaceholder")}
+                    className="w-full rounded-2xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#1B1B1B] py-3.5 pl-12 pr-24 rtl:pl-24 rtl:pr-12 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:border-[#D4A017] focus:outline-none"
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className="absolute right-3 rounded-xl bg-[#8B3A2E] px-4 py-2 text-xs font-bold text-white hover:bg-[#a34436] transition"
+                    className="absolute right-3 rtl:right-auto rtl:left-3 rounded-xl bg-[#8B3A2E] px-4 py-2 text-xs font-bold text-white hover:bg-[#a34436] transition"
                   >
-                    Search
+                    {t("nav.search")}
                   </button>
                 </form>
 
@@ -258,7 +255,7 @@ export default function Navbar() {
                           </div>
                         </div>
                         <div className="text-xs font-extrabold text-slate-900 dark:text-white">
-                          {item.price.toLocaleString()} EGP
+                          {item.price.toLocaleString()} {t("card.egp")}
                         </div>
                       </Link>
                     ))}
@@ -279,20 +276,40 @@ export default function Navbar() {
               className="border-b border-slate-200 dark:border-[#2D2D2D] bg-white/98 dark:bg-[#111111]/98 backdrop-blur-2xl xl:hidden overflow-hidden"
             >
               <div className="mx-auto max-w-[1800px] px-6 py-6 space-y-4">
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setIsVehicleModalOpen(true);
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-slate-100 dark:bg-[#1B1B1B] text-sm font-bold text-slate-900 dark:text-white"
-                >
-                  <div className="flex items-center gap-2">
-                    <Car className="h-5 w-5 text-[#D4A017]" />
-                    <span>{selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` : "Select My Vehicle"}</span>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-slate-400" />
-                </button>
 
+                {/* Mobile Language Selector Pill */}
+                <div className="p-3.5 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-slate-100 dark:bg-[#1B1B1B]">
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200 dark:border-[#2D2D2D]">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                      <Globe className="h-4 w-4 text-[#D4A017]" />
+                      <span>Language / اللغة</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {languages.map((lang) => {
+                      const isSelected = language === lang.code;
+                      return (
+                        <button
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code)}
+                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition ${
+                            isSelected
+                              ? "bg-[#8B3A2E] text-white shadow"
+                              : "bg-white dark:bg-[#111111] text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-[#2D2D2D]"
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span>{lang.flag}</span>
+                            <span>{lang.nativeName}</span>
+                          </span>
+                          {isSelected && <Check className="h-3.5 w-3.5 text-[#D4A017]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Mobile Theme Switch Button */}
                 <button
                   onClick={() => {
                     toggleTheme();
@@ -328,7 +345,7 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-gray-300 hover:text-[#D4A017]"
                   >
-                    <User className="h-5 w-5" /> Account Profile
+                    <User className="h-5 w-5" /> {t("nav.profile")}
                   </Link>
                 </div>
               </div>
@@ -336,9 +353,6 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </header>
-
-      {/* Global Vehicle Selector Modal */}
-      <VehicleSelectorModal />
     </>
   );
 }

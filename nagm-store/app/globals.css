@@ -13,4 +13,7 @@
   html {
     @apply font-sans;
   }
+  html[dir="rtl"] {
+    font-family: var(--font-cairo), system-ui, sans-serif;
+  }
 }

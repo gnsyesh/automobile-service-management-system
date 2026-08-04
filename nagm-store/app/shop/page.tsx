@@ -9,12 +9,14 @@ import { products } from "@/data/products";
 import { categories } from "@/data/categories";
 import { brands } from "@/data/brands";
 import { useVehicle } from "@/context/VehicleContext";
-import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car, Check, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { TranslationKey } from "@/locales/en";
+import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "lucide-react";
 
 function ShopContent() {
   const searchParams = useSearchParams();
-
   const { selectedVehicle, isCompatible, setIsVehicleModalOpen } = useVehicle();
+  const { t } = useLanguage();
 
   // Filter States
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -146,25 +148,26 @@ function ShopContent() {
     setCurrentPage(1);
   };
 
-  const currentCategoryObj = categories.find((c) => c.slug === categoryFilter);
+  const currentCatKey = `cat.${categoryFilter}` as TranslationKey;
+  const currentCatTitle = categoryFilter !== "all" ? (t(currentCatKey) !== currentCatKey ? t(currentCatKey) : categoryFilter) : t("shop.title");
 
   return (
-    <main className="min-h-screen bg-[#111111] text-gray-100 flex flex-col pt-32 pb-20">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#111111] text-slate-900 dark:text-gray-100 flex flex-col pt-32 pb-20 transition-colors duration-300">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1">
         
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2D2D2D] pb-6 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-6 mb-8 text-left rtl:text-right">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
-              LUXURY SPARE PARTS CATALOG
+              {t("shop.catalog")}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-white mt-1">
-              {currentCategoryObj ? currentCategoryObj.name : "Shop Automotive Products"}
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
+              {currentCatTitle}
             </h1>
-            <p className="text-xs text-gray-400 mt-1">
-              Showing {sortedProducts.length} authentic parts and fluids across Egypt
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+              {t("shop.showing")} ({sortedProducts.length})
             </p>
           </div>
 
@@ -172,13 +175,13 @@ function ShopContent() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsVehicleModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-[#D4A017]/40 bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-white hover:border-[#D4A017] transition shadow-md"
+              className="flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017] transition shadow-md"
             >
-              <Car className="h-4 w-4 text-[#D4A017]" />
+              <Car className="h-4 w-4 text-[#D4A017] shrink-0" />
               <span>
                 {selectedVehicle
-                  ? `Active Vehicle: ${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`
-                  : "Select My Car To Filter Fitment"}
+                  ? `${t("vehicle.active")}: ${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`
+                  : t("hero.findVehicle")}
               </span>
             </button>
           </div>
@@ -187,7 +190,7 @@ function ShopContent() {
         {/* Search Bar & Mobile Filter Trigger */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
           <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#D4A017]" />
+            <Search className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#D4A017]" />
             <input
               type="text"
               value={searchQuery}
@@ -195,8 +198,8 @@ function ShopContent() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by part name, SKU (e.g. NS-OIL-001), or brand..."
-              className="w-full rounded-xl border border-[#2D2D2D] bg-[#1B1B1B] py-2.5 pl-10 pr-4 text-xs text-white placeholder-gray-400 focus:border-[#D4A017] focus:outline-none"
+              placeholder={t("shop.searchPlaceholder")}
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] py-2.5 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:border-[#D4A017] focus:outline-none"
             />
           </div>
 
@@ -204,18 +207,18 @@ function ShopContent() {
             {/* Mobile Filter Toggle */}
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              className="lg:hidden flex items-center gap-2 rounded-xl border border-[#2D2D2D] bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-white hover:border-[#D4A017]"
+              className="lg:hidden flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017]"
             >
               <SlidersHorizontal className="h-4 w-4 text-[#D4A017]" />
-              <span>Filters</span>
+              <span>{t("shop.filters")}</span>
             </button>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 border border-[#2D2D2D] rounded-xl bg-[#1B1B1B] p-1">
+            <div className="flex items-center gap-1 border border-slate-300 dark:border-[#2D2D2D] rounded-xl bg-white dark:bg-[#1B1B1B] p-1">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-1.5 rounded-lg transition ${
-                  viewMode === "grid" ? "bg-[#8B3A2E] text-white" : "text-gray-400 hover:text-white"
+                  viewMode === "grid" ? "bg-[#8B3A2E] text-white" : "text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
                 aria-label="Grid View"
               >
@@ -224,7 +227,7 @@ function ShopContent() {
               <button
                 onClick={() => setViewMode("list")}
                 className={`p-1.5 rounded-lg transition ${
-                  viewMode === "list" ? "bg-[#8B3A2E] text-white" : "text-gray-400 hover:text-white"
+                  viewMode === "list" ? "bg-[#8B3A2E] text-white" : "text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
                 aria-label="List View"
               >
@@ -234,17 +237,17 @@ function ShopContent() {
 
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 hidden sm:inline">Sort:</span>
+              <span className="text-xs text-slate-500 dark:text-gray-400 hidden sm:inline">{t("shop.sort")}:</span>
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="rounded-xl border border-[#2D2D2D] bg-[#1B1B1B] px-3 py-2 text-xs text-white focus:border-[#D4A017] focus:outline-none font-semibold"
+                className="rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none font-semibold"
               >
-                <option value="popular">Most Popular</option>
-                <option value="latest">Newest Arrivals</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Best Rated</option>
+                <option value="popular">{t("shop.sortPopular")}</option>
+                <option value="latest">{t("shop.sortLatest")}</option>
+                <option value="price-low">{t("shop.sortLow")}</option>
+                <option value="price-high">{t("shop.sortHigh")}</option>
+                <option value="rating">{t("shop.sortRating")}</option>
               </select>
             </div>
           </div>
@@ -254,18 +257,18 @@ function ShopContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Sidebar Filter Column */}
-          <aside className={`lg:col-span-3 space-y-6 ${isMobileFilterOpen ? "block" : "hidden lg:block"}`}>
-            <div className="rounded-2xl border border-[#2D2D2D] bg-[#1B1B1B]/90 p-5 backdrop-blur-xl space-y-6 shadow-xl">
+          <aside className={`lg:col-span-3 space-y-6 ${isMobileFilterOpen ? "block" : "hidden lg:block"} text-left rtl:text-right`}>
+            <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/90 p-5 backdrop-blur-xl space-y-6 shadow-xl">
               
-              <div className="flex items-center justify-between border-b border-[#2D2D2D] pb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-[#D4A017]" /> Filters
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#2D2D2D] pb-3">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-[#D4A017] shrink-0" /> {t("shop.filters")}
                 </h3>
                 <button
                   onClick={handleResetFilters}
                   className="text-xs font-semibold text-[#D4A017] hover:underline flex items-center gap-1"
                 >
-                  Reset <RefreshCw className="h-3 w-3" />
+                  {t("shop.reset")} <RefreshCw className="h-3 w-3" />
                 </button>
               </div>
 
@@ -279,8 +282,8 @@ function ShopContent() {
                       onChange={(e) => setOnlyCompatible(e.target.checked)}
                       className="rounded accent-[#D4A017]"
                     />
-                    <span className="text-xs font-bold text-emerald-300">
-                      Fits My {selectedVehicle.make} {selectedVehicle.model} Only
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300">
+                      {t("shop.fitsMyCar")}
                     </span>
                   </label>
                 </div>
@@ -288,23 +291,26 @@ function ShopContent() {
 
               {/* Category Filter */}
               <div>
-                <h4 className="text-xs font-bold uppercase text-gray-400 mb-3">Categories</h4>
-                <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                <h4 className="text-xs font-bold uppercase text-slate-500 dark:text-gray-400 mb-3">{t("shop.categories")}</h4>
+                <div className="space-y-1 max-h-64 overflow-y-auto pr-1 rtl:pr-0 rtl:pl-1">
                   <button
                     onClick={() => {
                       setCategoryFilter("all");
                       setCurrentPage(1);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                      categoryFilter === "all" ? "bg-[#8B3A2E] text-white" : "text-gray-300 hover:bg-[#252525]"
+                      categoryFilter === "all" ? "bg-[#8B3A2E] text-white" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#252525]"
                     }`}
                   >
-                    <span>All Categories</span>
+                    <span>{t("shop.allCategories")}</span>
                     <span className="text-[10px] opacity-70">{products.length}</span>
                   </button>
                   {categories.map((cat) => {
                     const isSelected = categoryFilter === cat.slug;
                     const count = products.filter((p) => p.category === cat.slug || p.subcategory === cat.slug).length;
+                    const catKey = `cat.${cat.slug}` as TranslationKey;
+                    const catName = t(catKey) !== catKey ? t(catKey) : cat.name;
+
                     return (
                       <button
                         key={cat.id}
@@ -313,11 +319,11 @@ function ShopContent() {
                           setCurrentPage(1);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                          isSelected ? "bg-[#8B3A2E] text-white shadow-md" : "text-gray-300 hover:bg-[#252525]"
+                          isSelected ? "bg-[#8B3A2E] text-white shadow-md" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#252525]"
                         }`}
                       >
-                        <span className="truncate">{cat.name}</span>
-                        <span className="text-[10px] opacity-70 ml-2 shrink-0">{count}</span>
+                        <span className="truncate">{catName}</span>
+                        <span className="text-[10px] opacity-70 ml-2 rtl:ml-0 rtl:mr-2 shrink-0">{count}</span>
                       </button>
                     );
                   })}
@@ -326,12 +332,12 @@ function ShopContent() {
 
               {/* Brand Filter */}
               <div>
-                <h4 className="text-xs font-bold uppercase text-gray-400 mb-3">Brands</h4>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <h4 className="text-xs font-bold uppercase text-slate-500 dark:text-gray-400 mb-3">{t("shop.brands")}</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 rtl:pr-0 rtl:pl-1">
                   {brands.map((b) => {
                     const isSelected = selectedBrands.includes(b.slug);
                     return (
-                      <label key={b.id} className="flex items-center gap-2 cursor-pointer text-xs text-gray-300 hover:text-white">
+                      <label key={b.id} className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -347,9 +353,9 @@ function ShopContent() {
 
               {/* Price Range Slider */}
               <div>
-                <div className="flex items-center justify-between text-xs font-bold text-gray-400 mb-2">
-                  <span>Max Price:</span>
-                  <span className="text-[#D4A017]">{maxPrice.toLocaleString()} EGP</span>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-gray-400 mb-2">
+                  <span>{t("shop.maxPrice")}:</span>
+                  <span className="text-[#D4A017]">{maxPrice.toLocaleString()} {t("card.egp")}</span>
                 </div>
                 <input
                   type="range"
@@ -367,7 +373,7 @@ function ShopContent() {
 
               {/* In Stock Only */}
               <div>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-300">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-gray-300">
                   <input
                     type="checkbox"
                     checked={inStockOnly}
@@ -377,7 +383,7 @@ function ShopContent() {
                     }}
                     className="rounded accent-[#8B3A2E]"
                   />
-                  <span>In Stock Items Only</span>
+                  <span>{t("shop.inStock")}</span>
                 </label>
               </div>
 
@@ -400,7 +406,7 @@ function ShopContent() {
                     <button
                       disabled={currentPage === 1}
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="px-4 py-2 rounded-xl border border-[#2D2D2D] bg-[#1B1B1B] text-xs font-bold text-white hover:border-[#D4A017] disabled:opacity-40 transition"
+                      className="px-4 py-2 rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017] disabled:opacity-40 transition"
                     >
                       Previous
                     </button>
@@ -414,7 +420,7 @@ function ShopContent() {
                           className={`h-9 w-9 rounded-xl text-xs font-bold transition ${
                             currentPage === pageNum
                               ? "bg-[#8B3A2E] text-white shadow-lg border border-[#D4A017]"
-                              : "bg-[#1B1B1B] text-gray-400 hover:text-white border border-[#2D2D2D]"
+                              : "bg-white dark:bg-[#1B1B1B] text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-[#2D2D2D]"
                           }`}
                         >
                           {pageNum}
@@ -425,7 +431,7 @@ function ShopContent() {
                     <button
                       disabled={currentPage === totalPages}
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="px-4 py-2 rounded-xl border border-[#2D2D2D] bg-[#1B1B1B] text-xs font-bold text-white hover:border-[#D4A017] disabled:opacity-40 transition"
+                      className="px-4 py-2 rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017] disabled:opacity-40 transition"
                     >
                       Next
                     </button>
@@ -433,17 +439,17 @@ function ShopContent() {
                 )}
               </>
             ) : (
-              <div className="rounded-3xl border border-[#2D2D2D] bg-[#1B1B1B] p-12 text-center">
+              <div className="rounded-3xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] p-12 text-center">
                 <Search className="mx-auto h-12 w-12 text-[#D4A017] mb-4 opacity-80" />
-                <h3 className="text-xl font-bold text-white">No Automotive Products Found</h3>
-                <p className="text-sm text-gray-400 mt-2 max-w-md mx-auto">
-                  Try adjusting your filter criteria, resetting search parameters, or changing your active car selection.
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t("shop.noProducts")}</h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
+                  {t("shop.noProductsDesc")}
                 </p>
                 <button
                   onClick={handleResetFilters}
                   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#8B3A2E] px-6 py-3 text-xs font-bold text-white hover:bg-[#a34436] transition shadow-lg"
                 >
-                  <RefreshCw className="h-4 w-4" /> Reset All Filters
+                  <RefreshCw className="h-4 w-4" /> {t("shop.reset")}
                 </button>
               </div>
             )}
@@ -460,7 +466,7 @@ function ShopContent() {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#111111] flex items-center justify-center text-white font-bold">Loading Negm Shop...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#111111] flex items-center justify-center text-slate-900 dark:text-white font-bold">Loading Negm Shop...</div>}>
       <ShopContent />
     </Suspense>
   );
