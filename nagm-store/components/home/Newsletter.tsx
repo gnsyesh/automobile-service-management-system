@@ -17,8 +17,8 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="py-16 bg-[#111111] border-t border-[#2D2D2D]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-16 bg-slate-50 dark:bg-[#111111] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300 overflow-hidden w-full max-w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-w-0">
         <div className="relative overflow-hidden rounded-3xl border border-[#D4A017]/40 bg-gradient-to-r from-[#1B1B1B] via-[#261d19] to-[#8B3A2E]/40 p-8 sm:p-12 backdrop-blur-2xl shadow-2xl">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">

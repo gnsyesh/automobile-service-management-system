@@ -23,7 +23,7 @@ export const brands: Brand[] = [
     id: "castrol",
     name: "Castrol",
     slug: "castrol",
-    logo: "https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=200",
+    logo: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=200",
     country: "UK",
     description: "Castrol EDGE fluid TITANIUM technology for maximum engine performance under pressure.",
     featured: true
@@ -50,7 +50,7 @@ export const brands: Brand[] = [
     id: "liqui-moly",
     name: "Liqui Moly",
     slug: "liqui-moly",
-    logo: "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=200",
+    logo: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=200",
     country: "Germany",
     description: "Made in Germany additives, motor oils, and vehicle maintenance products.",
     featured: true
@@ -95,7 +95,7 @@ export const brands: Brand[] = [
     id: "brembo",
     name: "Brembo",
     slug: "brembo",
-    logo: "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=200",
+    logo: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=200",
     country: "Italy",
     description: "High-performance sports braking systems, ceramic pads, and slotted rotors.",
     featured: true
@@ -158,7 +158,7 @@ export const brands: Brand[] = [
     id: "acdelco",
     name: "ACDelco",
     slug: "acdelco",
-    logo: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=200",
+    logo: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=200",
     country: "USA",
     description: "GM Original Equipment automotive maintenance fluids, filters, and batteries.",
     featured: false

@@ -73,7 +73,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeMode>("luxury-gold");
+  const [theme, setThemeState] = useState<ThemeMode>("light-executive");
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -82,7 +82,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem("negm_theme") as ThemeMode;
       if (saved && themes.some((t) => t.id === saved)) {
         setThemeState(saved);
-      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+      } else {
         setThemeState("light-executive");
       }
     } catch (e) {

@@ -10,8 +10,8 @@ export default function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="border-t border-slate-200 dark:border-[#2D2D2D] bg-slate-900 text-slate-300 dark:bg-[#0A0A0A] dark:text-gray-400 pt-16 pb-12 transition-colors duration-300 text-left rtl:text-right">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <footer className="border-t border-slate-200 dark:border-[#2D2D2D] bg-slate-900 text-slate-300 dark:bg-[#0A0A0A] dark:text-gray-400 pt-16 pb-12 transition-colors duration-300 text-left rtl:text-right overflow-hidden w-full max-w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-w-0">
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800 dark:border-[#2D2D2D]">
           
@@ -93,9 +93,9 @@ export default function Footer() {
 
         {/* Bottom Copyright & Payment Methods */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <p>{t("footer.copyright")}</p>
+          <p className="text-center sm:text-left rtl:sm:text-right">{t("footer.copyright")}</p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-3">
             <span className="text-slate-400 dark:text-gray-500 font-medium">{t("footer.paymentMethods")}</span>
             <div className="flex items-center gap-2 text-white font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
               <span>Cash on Delivery</span>

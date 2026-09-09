@@ -22,11 +22,11 @@ export default function FeaturedProducts() {
     : products.filter((p) => p.category === activeTab).slice(0, 8);
 
   return (
-    <section className="py-20 bg-slate-100 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-slate-100 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300 overflow-hidden w-full max-w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-w-0">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 w-full min-w-0">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017] flex items-center gap-1.5">
               <Sparkles className="h-4 w-4" /> HANDPICKED PERFORMANCE
@@ -37,7 +37,7 @@ export default function FeaturedProducts() {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div className="w-full min-w-0 max-w-full flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

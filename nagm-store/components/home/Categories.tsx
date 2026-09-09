@@ -30,8 +30,8 @@ export default function Categories() {
   const { t, language } = useLanguage();
 
   return (
-    <section className="py-20 bg-slate-50 dark:bg-[#111111] transition-colors duration-300">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-slate-50 dark:bg-[#111111] transition-colors duration-300 overflow-hidden w-full max-w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-w-0">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">

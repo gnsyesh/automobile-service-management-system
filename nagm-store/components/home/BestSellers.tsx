@@ -10,8 +10,8 @@ export default function BestSellers() {
   const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 4);
 
   return (
-    <section className="py-20 bg-slate-50 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-slate-50 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300 overflow-hidden w-full max-w-full">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full min-w-0">
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>

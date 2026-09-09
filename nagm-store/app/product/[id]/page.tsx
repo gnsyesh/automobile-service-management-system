@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
     .slice(0, 4);
 
   return (
-    <main className="min-h-screen bg-[#111111] text-gray-100 flex flex-col pt-32 pb-20">
+    <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1">
@@ -274,7 +274,7 @@ export default function ProductDetailPage() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => addToCart(product, quantity)}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#8B3A2E] py-4 text-sm font-bold text-white hover:bg-[#a34436] transition shadow-xl hover:shadow-[0_10px_25px_rgba(139,58,46,0.3)]"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#8B3A2E] py-3.5 sm:py-4 text-sm font-bold text-white hover:bg-[#a34436] transition shadow-xl hover:shadow-[0_10px_25px_rgba(139,58,46,0.3)]"
                 >
                   <ShoppingBag className="h-5 w-5" />
                   <span>Add {quantity} to Cart</span>
@@ -282,18 +282,18 @@ export default function ProductDetailPage() {
 
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-[#D4A017] bg-[#D4A017] py-4 text-sm font-black text-black hover:bg-yellow-400 transition shadow-xl"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-[#D4A017] bg-[#D4A017] py-3.5 sm:py-4 text-sm font-black text-black hover:bg-yellow-400 transition shadow-xl"
                 >
-                  <span>Buy Now (Instant Checkout)</span>
-                  <ArrowRight className="h-5 w-5" />
+                  <span>Buy Now</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
 
                 <button
                   onClick={() => toggleWishlist(product)}
-                  className={`p-4 rounded-xl border transition ${
+                  className={`p-3.5 sm:p-4 rounded-xl border transition flex items-center justify-center ${
                     isLiked
                       ? "border-red-500 bg-red-500/10 text-red-500"
-                      : "border-[#2D2D2D] bg-[#1B1B1B] text-gray-400 hover:text-white"
+                      : "border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] text-slate-600 dark:text-gray-400 hover:text-red-500"
                   }`}
                   aria-label="Wishlist"
                 >

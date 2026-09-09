@@ -6,7 +6,7 @@ export const categories: Category[] = [
     name: "Engine Oils",
     slug: "engine-oils",
     description: "Premium fully synthetic, semi-synthetic, and mineral engine oils for ultimate engine protection.",
-    image: "https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=800",
     iconName: "Droplet",
     subcategories: [
       { id: "fully-synthetic", name: "Fully Synthetic Oils", slug: "fully-synthetic" },
@@ -19,7 +19,7 @@ export const categories: Category[] = [
     name: "Gear & Transmission Fluids",
     slug: "transmission-fluids",
     description: "Automatic Transmission Fluids (ATF), manual gear oils, and differential lubricants.",
-    image: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800",
     iconName: "Settings",
     subcategories: [
       { id: "atf", name: "Automatic Transmission Fluids (ATF)", slug: "atf" },
@@ -32,7 +32,7 @@ export const categories: Category[] = [
     name: "Brake System",
     slug: "brake-system",
     description: "High-performance ceramic & metallic brake pads, ventilated discs, and DOT 4/5.1 brake fluids.",
-    image: "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800",
     iconName: "Disc",
     subcategories: [
       { id: "brake-pads", name: "Brake Pads", slug: "brake-pads" },
@@ -188,7 +188,7 @@ export const categories: Category[] = [
     name: "Tools & Emergency Kits",
     slug: "tools-emergency",
     description: "Heavy-duty jump starters, portable air compressors, battery chargers, and high-pressure washers.",
-    image: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800",
     iconName: "Hammer",
     subcategories: [
       { id: "jump-starters", name: "Jump Starters & Chargers", slug: "jump-starters" },

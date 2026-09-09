@@ -32,7 +32,7 @@ export default function VehicleSearch() {
   };
 
   return (
-    <section className="relative z-20 -mt-10 mx-auto max-w-6xl px-4">
+    <section className="relative z-20 -mt-10 mx-auto max-w-6xl px-4 w-full min-w-0">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

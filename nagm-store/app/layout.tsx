@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { VehicleProvider } from "@/context/VehicleContext";
@@ -28,6 +29,12 @@ export const metadata: Metadata = {
   description: "Shop 100% genuine motor oils, brake pads, filters, batteries, tyres, and car accessories in Egypt with fast delivery.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,27 +43,29 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full w-full max-w-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 selection:bg-[#8B3A2E] selection:text-white transition-colors duration-300">
+      <body className="min-h-full w-full max-w-full min-w-0 flex flex-col bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 selection:bg-[#8B3A2E] selection:text-white transition-colors duration-300">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange={false}
         >
-          <LanguageProvider>
-            <ToastProvider>
-              <VehicleProvider>
-                <WishlistProvider>
-                  <CartProvider>
-                    {children}
-                  </CartProvider>
-                </WishlistProvider>
-              </VehicleProvider>
-            </ToastProvider>
-          </LanguageProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <ToastProvider>
+                <VehicleProvider>
+                  <WishlistProvider>
+                    <CartProvider>
+                      {children}
+                    </CartProvider>
+                  </WishlistProvider>
+                </VehicleProvider>
+              </ToastProvider>
+            </LanguageProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -19,7 +19,7 @@ export const products: Product[] = [
     isFeatured: true,
     isBestSeller: true,
     images: [
-      "https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=800",
       "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Advanced full synthetic engine oil providing exceptional cleaning power, wear protection, and overall performance.",
@@ -108,7 +108,7 @@ export const products: Product[] = [
     stockCount: 50,
     isBestSeller: true,
     images: [
-      "https://images.unsplash.com/photo-1615900119311-654877f0a9ef?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Engineered with Fluid TITANIUM Technology that transforms under pressure to keep metal apart.",
     description: "Castrol EDGE 5W-40 with Fluid TITANIUM is the natural choice for drivers who demand maximum engine performance from today's modern vehicles requiring a high level of protection and higher performance oils.",
@@ -219,7 +219,7 @@ export const products: Product[] = [
     stockCount: 20,
     isOffer: true,
     images: [
-      "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Premium German 100% synthetic low-friction motor oil for year-round use in modern gasoline & diesel engines.",
     description: "Top-class, modern, low-friction engine oil for all-season use in gasoline and diesel engines with and without multi-valve technology, turbocharging and charge air cooling. Crafted in Germany.",
@@ -259,7 +259,7 @@ export const products: Product[] = [
     inStock: true,
     stockCount: 40,
     images: [
-      "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Exceptionally high performance lubricant that meets original equipment manufacturers' specifications for use in certain slip-controlled automatic transmissions.",
     description: "Mobil ATF 3309 is recommended for use in transmissions requiring fluids meeting JWS 3309 or GM 9986195 quality levels. It is also recommended for service fill applications where Toyota T-IV or T-4 is specified.",
@@ -294,7 +294,7 @@ export const products: Product[] = [
     inStock: true,
     stockCount: 25,
     images: [
-      "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "High-performance low-viscosity synthetic automatic transmission oil developed for modern 6, 8, and 9-speed automatic transmissions.",
     description: "Liqui Moly Top Tec ATF 1800 is a modern high-performance ATF based on synthetic technology. It provides maximum thermal stability and wear protection even in harsh driving conditions.",
@@ -330,7 +330,7 @@ export const products: Product[] = [
     stockCount: 35,
     isFeatured: true,
     images: [
-      "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Low-dust, noise-free premium ceramic brake pads designed for superior stopping power.",
     description: "Brembo Ceramic brake pads are engineered to minimize braking distance while offering maximum braking comfort, low dust emission, and quiet performance.",
@@ -368,7 +368,7 @@ export const products: Product[] = [
     stockCount: 50,
     isBestSeller: true,
     images: [
-      "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Bosch QuietCast metallic technology delivers high stopping performance and long service life.",
     description: "Bosch QuietCast Brake Pads offer premium performance that vehicle owners can rely on. Engineered with Molded Shim Technology (MST) to ensure maximum stability and silent stopping.",
@@ -402,7 +402,7 @@ export const products: Product[] = [
     inStock: true,
     stockCount: 18,
     images: [
-      "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "High-carbon UV coated ventilated brake rotors providing superior corrosion protection and thermal dissipation.",
     description: "Brembo UV Coated brake rotors offer an environmentally friendly solvent-free UV coating technology that offers superior protection to the disc, including the braking surfaces, hub, and outer edge.",
@@ -435,7 +435,7 @@ export const products: Product[] = [
     inStock: true,
     stockCount: 65,
     images: [
-      "https://images.unsplash.com/photo-1600706432520-22d73f91ef8d?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "High boiling point DOT 4 synthetic hydraulic brake fluid for ABS and ESP braking systems.",
     description: "Bosch DOT 4 brake fluid is formulated for modern disc and drum brake systems as well as hydraulic clutch systems. It features a wet boiling point exceeding safety requirements.",
@@ -1098,7 +1098,7 @@ export const products: Product[] = [
     inStock: true,
     stockCount: 40,
     images: [
-      "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "Premium frameless aerodynamic flat wiper blades with VisioRubber technology.",
     description: "Valeo Silencio Wiper blades ensure whisper-quiet wipe performance and streak-free visibility during rainstorms.",
@@ -1133,7 +1133,7 @@ export const products: Product[] = [
     stockCount: 20,
     isFeatured: true,
     images: [
-      "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800"
+      "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&q=80&w=800"
     ],
     shortDescription: "2000 Peak Amps battery jump starter capable of starting up to 8.0L Gas and 6.5L Diesel engines.",
     description: "Never get stranded with a dead battery again. Features smart jumper cables with spark-proof protection, built-in LED flashlight, and USB-C quick charge for smartphones.",

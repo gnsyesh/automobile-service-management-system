@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingBag, Heart, Eye, Star, CheckCircle, AlertTriangle } from "lucide-react";
+import { ShoppingBag, Heart, Eye, Star } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { useVehicle } from "@/context/VehicleContext";
 import { useLanguage } from "@/context/LanguageContext";
 import QuickViewModal from "./QuickViewModal";
 
@@ -20,12 +19,10 @@ interface ProductCardProps {
 export default function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { selectedVehicle, isCompatible } = useVehicle();
   const { t } = useLanguage();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const isLiked = isInWishlist(product.id);
-  const fitsVehicle = selectedVehicle ? isCompatible(product) : null;
 
   if (viewMode === "list") {
     return (
@@ -57,28 +54,6 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
                   {product.brand}
                 </span>
-
-                {selectedVehicle && fitsVehicle !== null && (
-                  <div
-                    className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border ${
-                      fitsVehicle
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                    }`}
-                  >
-                    {fitsVehicle ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{t("card.fits")} {selectedVehicle.model}</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{t("card.checkFitment")}</span>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
 
               <Link href={`/product/${product.id}`} className="block group-hover:text-[#D4A017] transition-colors">
@@ -239,29 +214,6 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 {product.name}
               </h3>
             </Link>
-
-            {/* Vehicle compatibility check banner */}
-            {selectedVehicle && fitsVehicle !== null && (
-              <div
-                className={`mt-2.5 flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-md border ${
-                  fitsVehicle
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                }`}
-              >
-                {fitsVehicle ? (
-                  <>
-                    <CheckCircle className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{t("card.fits")} {selectedVehicle.make} {selectedVehicle.model}</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{t("card.checkFitment")}</span>
-                  </>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Pricing & Add to Cart */}

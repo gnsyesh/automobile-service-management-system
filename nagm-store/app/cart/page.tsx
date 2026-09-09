@@ -119,7 +119,7 @@ export default function CartPage() {
                   </div>
 
                   {/* Quantity Controls & Price */}
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-[#2D2D2D]">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-6 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-[#2D2D2D]">
                     <div className="flex items-center rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111]">
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity - 1)}

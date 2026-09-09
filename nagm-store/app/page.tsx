@@ -15,7 +15,7 @@ import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#111111] text-gray-100 flex flex-col">
+    <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col transition-colors duration-300">
       <Navbar />
       <Hero />
       <VehicleSearch />

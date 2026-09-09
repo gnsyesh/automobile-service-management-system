@@ -16,13 +16,18 @@ import {
   Sun,
   Moon,
   Globe,
-  Check
+  Check,
+  LogOut,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 import AnnouncementBar from "./AnnouncementBar";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useLanguage, languages } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { products } from "@/data/products";
 
 export default function Navbar() {
@@ -36,6 +41,8 @@ export default function Navbar() {
   const { itemCount } = useCart();
   const { wishlistCount } = useWishlist();
   const { language, setLanguage, t } = useLanguage();
+  const { user, logOut } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -45,6 +52,16 @@ export default function Navbar() {
 
   const toggleTheme = () => {
     setTheme(isDarkMode ? "light" : "dark");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await logOut();
+      showToast("Signed out successfully", "success");
+      setIsOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const navLinks = [
@@ -79,33 +96,33 @@ export default function Navbar() {
       <header className="fixed top-0 left-0 z-50 w-full transition-all duration-300">
         <AnnouncementBar />
 
-        <div className="border-b border-slate-200 dark:border-[#2D2D2D] bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl shadow-md transition-colors duration-300">
-          <div className="mx-auto flex h-20 max-w-[1800px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 gap-6">
+        <div className="border-b border-slate-200 dark:border-[#2D2D2D] bg-white/95 dark:bg-[#111111]/95 backdrop-blur-xl shadow-md transition-colors duration-300">
+          <div className="mx-auto flex h-16 sm:h-20 max-w-[1800px] items-center justify-between px-3 sm:px-6 lg:px-8 xl:px-10 gap-2 sm:gap-6">
 
-            {/* Combined Official Icon + Styled HTML Text Logo */}
-            <Link href="/" className="flex items-center gap-3 shrink-0">
-              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-[#1B1B1B] p-1 border border-[#D4A017]/40 shadow-md">
+            {/* Square Logo with gently rounded corners + NEGM STORE text beside it */}
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+              <div className="relative h-9 w-9 sm:h-11 sm:w-11 md:h-12 md:w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-[#1B1B1B] p-1 border border-slate-200 dark:border-[#D4A017]/40 shadow-md">
                 <Image
                   src="/images/negm-store-logo.png"
-                  alt="Negm Store Official Icon"
+                  alt="Negm Store Logo"
                   fill
                   priority
                   className="object-contain p-0.5"
                 />
               </div>
               <div className="leading-none text-left rtl:text-right">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                <h1 className="text-base sm:text-xl md:text-2xl font-black tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
                   NEGM<span className="ml-1 text-[#D4A017]">STORE</span>
                 </h1>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 dark:text-gray-400 mt-0.5 font-semibold">
+                <p className="hidden xs:block text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-slate-500 dark:text-gray-400 mt-0.5 font-semibold whitespace-nowrap">
                   {t("nav.tagline")}
                 </p>
               </div>
             </Link>
 
             {/* Centered Desktop Navigation */}
-            <nav className="hidden xl:flex items-center justify-center flex-1 mx-6">
-              <ul className="flex items-center gap-9">
+            <nav className="hidden xl:flex items-center justify-center flex-1 mx-4">
+              <ul className="flex items-center gap-8">
                 {navLinks.map((link) => (
                   <li key={link.name}>
                     <Link
@@ -119,11 +136,11 @@ export default function Navbar() {
               </ul>
             </nav>
 
-            {/* Right Aligned Action Icons & Language Selector */}
-            <div className="flex items-center gap-3 shrink-0">
+            {/* Right Aligned Action Icons, Language & Theme Selectors */}
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0">
               
-              {/* Premium Language Selector */}
-              <div className="hidden sm:block">
+              {/* Language Selector */}
+              <div className="hidden md:block">
                 <LanguageSelector />
               </div>
 
@@ -132,12 +149,12 @@ export default function Navbar() {
                 onClick={toggleTheme}
                 aria-label="Toggle Theme"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                className="relative p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition-all border border-slate-200 dark:border-white/10"
+                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition-all border border-slate-200 dark:border-white/10"
               >
                 {mounted && isDarkMode ? (
-                  <Sun className="h-5 w-5 text-[#D4A017] transition-transform rotate-0 hover:rotate-45" />
+                  <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A017] transition-transform rotate-0 hover:rotate-45" />
                 ) : (
-                  <Moon className="h-5 w-5 text-indigo-600 dark:text-[#D4A017] transition-transform rotate-0 hover:-rotate-12" />
+                  <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 dark:text-[#D4A017] transition-transform rotate-0 hover:-rotate-12" />
                 )}
               </button>
 
@@ -145,23 +162,23 @@ export default function Navbar() {
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 aria-label="Search"
-                className="relative p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition"
+                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               {/* Wishlist Link */}
               <Link
                 href="/wishlist"
-                className="relative p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-[#252525] transition"
+                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-[#252525] transition"
                 aria-label="Wishlist"
               >
-                <Heart className="h-5 w-5" />
+                <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {wishlistCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow"
+                    className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-600 text-[9px] sm:text-[10px] font-bold text-white shadow"
                   >
                     {wishlistCount}
                   </motion.span>
@@ -171,37 +188,59 @@ export default function Navbar() {
               {/* Cart Link */}
               <Link
                 href="/cart"
-                className="relative p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition"
+                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition"
                 aria-label="Shopping Cart"
               >
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
                 {itemCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#8B3A2E] text-[10px] font-black text-white shadow border border-[#D4A017]"
+                    className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-[#8B3A2E] text-[9px] sm:text-[10px] font-black text-white shadow border border-[#D4A017]"
                   >
                     {itemCount}
                   </motion.span>
                 )}
               </Link>
 
-              {/* User Account Link */}
-              <Link
-                href="/profile"
-                className="hidden sm:flex p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition"
-                aria-label="Profile"
-              >
-                <User className="h-5 w-5" />
-              </Link>
+              {/* User Account / Auth Desktop */}
+              {user ? (
+                <div className="hidden md:flex items-center gap-2">
+                  <Link
+                    href="/profile"
+                    className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-[#D4A017] hover:bg-slate-200 dark:hover:bg-[#252525] transition flex items-center gap-1.5"
+                    aria-label="Profile"
+                    title={user.email || "Profile"}
+                  >
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A017]" />
+                  </Link>
+
+                  <button
+                    onClick={handleSignOut}
+                    className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-700 dark:text-gray-300 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-[#252525] transition"
+                    title="Sign Out"
+                    aria-label="Sign Out"
+                  >
+                    <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden md:flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-[#8B3A2E] text-white text-xs font-bold hover:bg-[#a34436] transition shadow-md"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{t("nav.login")}</span>
+                </Link>
+              )}
 
               {/* Mobile Hamburger */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-800 dark:text-white xl:hidden"
+                className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-slate-800 dark:text-white xl:hidden"
                 aria-label="Menu"
               >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                {isOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
               </button>
             </div>
           </div>
@@ -277,7 +316,7 @@ export default function Navbar() {
             >
               <div className="mx-auto max-w-[1800px] px-6 py-6 space-y-4">
 
-                {/* Mobile Language Selector Pill */}
+                {/* Mobile Language Selector */}
                 <div className="p-3.5 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-slate-100 dark:bg-[#1B1B1B]">
                   <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-200 dark:border-[#2D2D2D]">
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
@@ -336,18 +375,73 @@ export default function Navbar() {
                         </Link>
                       </li>
                     ))}
+                    <li>
+                      <Link
+                        href="/cart"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-800 dark:text-gray-200 hover:bg-[#8B3A2E]/20 hover:text-[#D4A017] transition"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ShoppingCart className="h-5 w-5 text-[#D4A017]" />
+                          <span>{t("nav.cart")}</span>
+                        </span>
+                        {itemCount > 0 && (
+                          <span className="rounded-full bg-[#8B3A2E] px-2 py-0.5 text-xs font-black text-white">
+                            {itemCount}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
                   </ul>
                 </nav>
 
-                <div className="pt-4 border-t border-slate-200 dark:border-[#2D2D2D] flex items-center justify-around">
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-gray-300 hover:text-[#D4A017]"
-                  >
-                    <User className="h-5 w-5" /> {t("nav.profile")}
-                  </Link>
+                {/* Mobile Authentication Actions */}
+                <div className="pt-4 border-t border-slate-200 dark:border-[#2D2D2D] space-y-2">
+                  {user ? (
+                    <>
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#1B1B1B] text-sm font-bold text-slate-900 dark:text-white hover:text-[#D4A017] transition"
+                      >
+                        <span className="flex items-center gap-2">
+                          <User className="h-5 w-5 text-[#D4A017]" />
+                          <span>{t("nav.profile")}</span>
+                        </span>
+                        <span className="text-xs text-gray-400 font-normal truncate max-w-[150px]">{user.email}</span>
+                      </Link>
+
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link
+                        href="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#8B3A2E] text-white text-sm font-bold hover:bg-[#a34436] transition shadow-md"
+                      >
+                        <LogIn className="h-4 w-4" />
+                        <span>{t("nav.login")}</span>
+                      </Link>
+
+                      <Link
+                        href="/signup"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-slate-100 dark:bg-[#1B1B1B] text-slate-900 dark:text-white text-sm font-bold hover:border-[#D4A017] transition"
+                      >
+                        <UserPlus className="h-4 w-4 text-[#D4A017]" />
+                        <span>{t("nav.signup")}</span>
+                      </Link>
+                    </div>
+                  )}
                 </div>
+
               </div>
             </motion.div>
           )}

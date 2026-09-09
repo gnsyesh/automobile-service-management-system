@@ -47,19 +47,19 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative z-10 w-full max-w-4xl rounded-2xl border border-[#D4A017]/30 bg-[#1B1B1B] p-6 shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-[#D4A017]/30 bg-white dark:bg-[#1B1B1B] p-4 sm:p-6 shadow-2xl"
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-[#111111] text-gray-400 hover:text-white hover:bg-[#8B3A2E] transition-all"
+            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-100 dark:bg-[#111111] text-slate-500 dark:text-gray-400 hover:text-white hover:bg-[#8B3A2E] dark:hover:bg-[#8B3A2E] transition-all"
           >
             <X className="h-5 w-5" />
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* Gallery Column */}
             <div className="flex flex-col gap-4">
-              <div className="relative h-72 w-full overflow-hidden rounded-xl bg-[#111111] p-4 flex items-center justify-center">
+              <div className="relative h-60 sm:h-72 w-full overflow-hidden rounded-xl bg-slate-50 dark:bg-[#111111] p-4 flex items-center justify-center border border-slate-200 dark:border-transparent">
                 <Image
                   src={product.images[selectedImageIndex] || product.images[0]}
                   alt={product.name}
@@ -79,8 +79,8 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                     <button
                       key={idx}
                       onClick={() => setSelectedImageIndex(idx)}
-                      className={`relative h-16 w-16 shrink-0 rounded-lg overflow-hidden border-2 bg-[#111111] transition-all ${
-                        selectedImageIndex === idx ? "border-[#D4A017]" : "border-transparent opacity-60 hover:opacity-100"
+                      className={`relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-lg overflow-hidden border-2 bg-slate-50 dark:bg-[#111111] transition-all ${
+                        selectedImageIndex === idx ? "border-[#D4A017]" : "border-slate-200 dark:border-transparent opacity-60 hover:opacity-100"
                       }`}
                     >
                       <Image src={img} alt="" fill className="object-contain p-1" />
@@ -97,67 +97,67 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                   {product.brand} • {product.category.toUpperCase()}
                 </span>
 
-                <h2 className="mt-1 text-xl font-bold text-white leading-tight">
+                <h2 className="mt-1 text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-tight">
                   {product.name}
                 </h2>
 
-                <div className="mt-2 flex items-center gap-3">
+                <div className="mt-2 flex flex-wrap items-center gap-3">
                   <div className="flex items-center text-[#D4A017]">
                     <Star className="h-4 w-4 fill-current" />
-                    <span className="ml-1 text-sm font-bold text-white">{product.rating}</span>
+                    <span className="ml-1 text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
                   </div>
-                  <span className="text-xs text-gray-500">({product.reviewsCount} verified reviews)</span>
-                  <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                  <span className="text-xs text-slate-500 dark:text-gray-500">({product.reviewsCount} verified reviews)</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5" /> 100% Genuine
                   </span>
                 </div>
 
                 <div className="mt-4 flex items-baseline gap-3">
-                  <span className="text-3xl font-extrabold text-white">
+                  <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
                     {product.price.toLocaleString()} <span className="text-base text-[#D4A017] font-semibold">EGP</span>
                   </span>
                   {product.oldPrice && (
-                    <span className="text-base text-gray-500 line-through">
+                    <span className="text-base text-slate-400 dark:text-gray-500 line-through">
                       {product.oldPrice.toLocaleString()} EGP
                     </span>
                   )}
                 </div>
 
-                <p className="mt-3 text-sm text-gray-300 leading-relaxed line-clamp-3">
+                <p className="mt-3 text-sm text-slate-600 dark:text-gray-300 leading-relaxed line-clamp-3">
                   {product.shortDescription}
                 </p>
 
                 {/* Specs Snippet */}
-                <div className="mt-4 rounded-xl border border-[#2D2D2D] bg-[#111111]/60 p-3 space-y-1.5">
+                <div className="mt-4 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111]/60 p-3 space-y-1.5">
                   {product.specifications.slice(0, 3).map((spec, idx) => (
                     <div key={idx} className="flex justify-between text-xs">
-                      <span className="text-gray-400">{spec.label}:</span>
-                      <span className="font-semibold text-gray-200">{spec.value}</span>
+                      <span className="text-slate-500 dark:text-gray-400">{spec.label}:</span>
+                      <span className="font-semibold text-slate-800 dark:text-gray-200">{spec.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Quantity & CTA */}
-              <div className="mt-6 pt-4 border-t border-[#2D2D2D] flex flex-col gap-3">
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-semibold text-gray-400 uppercase">Quantity</span>
-                  <div className="flex items-center border border-[#2D2D2D] rounded-xl bg-[#111111]">
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#2D2D2D] flex flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase">Quantity</span>
+                  <div className="flex items-center border border-slate-200 dark:border-[#2D2D2D] rounded-xl bg-slate-50 dark:bg-[#111111]">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="px-3 py-1.5 text-gray-300 hover:text-white transition"
+                      className="px-3 py-1.5 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition"
                     >
                       -
                     </button>
-                    <span className="px-3 py-1.5 text-sm font-bold text-white">{quantity}</span>
+                    <span className="px-3 py-1.5 text-sm font-bold text-slate-900 dark:text-white">{quantity}</span>
                     <button
                       onClick={() => setQuantity((q) => Math.min(product.stockCount, q + 1))}
-                      className="px-3 py-1.5 text-gray-300 hover:text-white transition"
+                      className="px-3 py-1.5 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition"
                     >
                       +
                     </button>
                   </div>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-slate-500 dark:text-gray-500">
                     {product.stockCount} items in stock
                   </span>
                 </div>
@@ -176,7 +176,7 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                     className={`p-3 rounded-xl border transition ${
                       isLiked
                         ? "border-red-500 bg-red-500/10 text-red-500"
-                        : "border-[#2D2D2D] bg-[#111111] text-gray-400 hover:text-white"
+                        : "border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     <Heart className={`h-5 w-5 ${isLiked ? "fill-current" : ""}`} />

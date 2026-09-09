@@ -26,7 +26,7 @@ export default function OrderSuccessPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#111111] text-gray-100 flex flex-col pt-32 pb-20">
+    <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
       <Navbar />
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 w-full flex-1">
@@ -34,64 +34,64 @@ export default function OrderSuccessPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="rounded-3xl border border-[#D4A017]/40 bg-[#1B1B1B] p-8 sm:p-12 backdrop-blur-2xl shadow-2xl text-center space-y-8"
+          className="rounded-3xl border border-slate-200 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] p-6 sm:p-12 backdrop-blur-2xl shadow-xl dark:shadow-2xl text-center space-y-6 sm:space-y-8"
         >
           
           {/* Animated Victory Icon */}
-          <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
-            <CheckCircle2 className="h-12 w-12" />
+          <div className="relative mx-auto flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
+            <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12" />
           </div>
 
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
               ORDER CONFIRMED & IN PROCESS
             </span>
-            <h1 className="text-3xl sm:text-4xl font-black text-white mt-1">
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
               Thank You For Your Order!
             </h1>
-            <p className="text-sm text-gray-300 mt-2 max-w-md mx-auto">
+            <p className="text-sm text-slate-600 dark:text-gray-300 mt-2 max-w-md mx-auto">
               Your order has been received and is being prepared by our central warehouse team in New Cairo.
             </p>
           </div>
 
           {/* Order Details Card */}
           {order && (
-            <div className="rounded-2xl border border-[#2D2D2D] bg-[#111111] p-6 text-left space-y-6">
+            <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] p-4 sm:p-6 text-left space-y-6">
               
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-[#2D2D2D] pb-4 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-4 text-xs">
                 <div>
-                  <span className="text-gray-400">Order Number:</span>
+                  <span className="text-slate-500 dark:text-gray-400">Order Number:</span>
                   <div className="font-extrabold text-[#D4A017] text-sm">{order.id}</div>
                 </div>
                 <div>
-                  <span className="text-gray-400">Order Date:</span>
-                  <div className="font-bold text-white">{order.orderDate}</div>
+                  <span className="text-slate-500 dark:text-gray-400">Order Date:</span>
+                  <div className="font-bold text-slate-900 dark:text-white">{order.orderDate}</div>
                 </div>
                 <div>
-                  <span className="text-gray-400">Estimated Delivery:</span>
-                  <div className="font-bold text-emerald-400">{order.estimatedDelivery}</div>
+                  <span className="text-slate-500 dark:text-gray-400">Estimated Delivery:</span>
+                  <div className="font-bold text-emerald-600 dark:text-emerald-400">{order.estimatedDelivery}</div>
                 </div>
                 <div>
-                  <span className="text-gray-400">Tracking Code:</span>
-                  <div className="font-mono text-gray-300">{order.trackingNumber}</div>
+                  <span className="text-slate-500 dark:text-gray-400">Tracking Code:</span>
+                  <div className="font-mono text-slate-700 dark:text-gray-300">{order.trackingNumber}</div>
                 </div>
               </div>
 
               {/* Items List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase text-gray-400">Ordered Spare Parts & Fluids</h4>
+                <h4 className="text-xs font-bold uppercase text-slate-500 dark:text-gray-400">Ordered Spare Parts & Fluids</h4>
                 {order.items?.map((item) => (
-                  <div key={item.product.id} className="flex items-center justify-between gap-3 text-xs border-b border-[#2D2D2D]/60 pb-2">
+                  <div key={item.product.id} className="flex items-center justify-between gap-3 text-xs border-b border-slate-200/80 dark:border-[#2D2D2D]/60 pb-2">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 bg-[#1B1B1B] rounded-xl overflow-hidden p-1">
+                      <div className="relative h-12 w-12 shrink-0 bg-white dark:bg-[#1B1B1B] rounded-xl overflow-hidden p-1 border border-slate-200 dark:border-transparent">
                         <Image src={item.product.images[0]} alt="" fill className="object-contain" />
                       </div>
                       <div>
-                        <div className="font-bold text-white">{item.product.name}</div>
-                        <div className="text-gray-400">Brand: {item.product.brand} • Qty: {item.quantity}</div>
+                        <div className="font-bold text-slate-900 dark:text-white">{item.product.name}</div>
+                        <div className="text-slate-500 dark:text-gray-400">Brand: {item.product.brand} • Qty: {item.quantity}</div>
                       </div>
                     </div>
-                    <div className="font-bold text-white">
+                    <div className="font-bold text-slate-900 dark:text-white">
                       {(item.product.price * item.quantity).toLocaleString()} EGP
                     </div>
                   </div>
@@ -100,9 +100,9 @@ export default function OrderSuccessPage() {
 
               {/* Summary Totals */}
               <div className="pt-2 text-xs space-y-1.5 text-right">
-                <div className="text-gray-400">Subtotal: <span className="text-white font-bold">{order.subtotal?.toLocaleString()} EGP</span></div>
-                <div className="text-gray-400">VAT (14%): <span className="text-white font-bold">{order.vat?.toLocaleString()} EGP</span></div>
-                <div className="text-sm font-black text-white pt-2 border-t border-[#2D2D2D]">
+                <div className="text-slate-500 dark:text-gray-400">Subtotal: <span className="text-slate-900 dark:text-white font-bold">{order.subtotal?.toLocaleString()} EGP</span></div>
+                <div className="text-slate-500 dark:text-gray-400">VAT (14%): <span className="text-slate-900 dark:text-white font-bold">{order.vat?.toLocaleString()} EGP</span></div>
+                <div className="text-sm font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-[#2D2D2D]">
                   Grand Total Paid: <span className="text-[#D4A017]">{order.total?.toLocaleString()} EGP</span>
                 </div>
               </div>
@@ -111,10 +111,10 @@ export default function OrderSuccessPage() {
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 pt-4">
             <button
               onClick={handlePrint}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#D4A017]/40 bg-[#1B1B1B] px-6 py-3.5 text-xs font-bold text-white hover:border-[#D4A017] transition shadow-lg"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] px-6 py-3.5 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017] transition shadow-md"
             >
               <Printer className="h-4 w-4 text-[#D4A017]" />
               <span>Print / Save Receipt PDF</span>
@@ -122,7 +122,7 @@ export default function OrderSuccessPage() {
 
             <Link
               href="/profile"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#2D2D2D] bg-[#111111] px-6 py-3.5 text-xs font-bold text-gray-300 hover:text-white transition"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#111111] px-6 py-3.5 text-xs font-bold text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm"
             >
               <Package className="h-4 w-4" />
               <span>View Order History</span>

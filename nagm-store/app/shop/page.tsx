@@ -8,14 +8,12 @@ import ProductCard from "@/components/common/ProductCard";
 import { products } from "@/data/products";
 import { categories } from "@/data/categories";
 import { brands } from "@/data/brands";
-import { useVehicle } from "@/context/VehicleContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { TranslationKey } from "@/locales/en";
-import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "lucide-react";
+import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw } from "lucide-react";
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const { selectedVehicle, isCompatible, setIsVehicleModalOpen } = useVehicle();
   const { t } = useLanguage();
 
   // Filter States
@@ -24,7 +22,6 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
-  const [onlyCompatible, setOnlyCompatible] = useState<boolean>(false);
   const [minRating, setMinRating] = useState<number>(0);
   const [sortOption, setSortOption] = useState<string>("popular");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -39,7 +36,6 @@ function ShopContent() {
     const cat = searchParams.get("category") || "all";
     const brd = searchParams.get("brand") || "all";
     const srch = searchParams.get("search") || "";
-    const comp = searchParams.get("compatible") === "true";
 
     setCategoryFilter(cat);
     if (brd !== "all") {
@@ -48,7 +44,6 @@ function ShopContent() {
       setSelectedBrands([]);
     }
     setSearchQuery(srch);
-    setOnlyCompatible(comp);
     setCurrentPage(1);
   }, [searchParams]);
 
@@ -94,14 +89,9 @@ function ShopContent() {
         return false;
       }
 
-      // Vehicle Compatibility
-      if (onlyCompatible && selectedVehicle) {
-        if (!isCompatible(p)) return false;
-      }
-
       return true;
     });
-  }, [searchQuery, categoryFilter, selectedBrands, maxPrice, inStockOnly, minRating, onlyCompatible, selectedVehicle, isCompatible]);
+  }, [searchQuery, categoryFilter, selectedBrands, maxPrice, inStockOnly, minRating]);
 
   // Sorting Logic
   const sortedProducts = useMemo(() => {
@@ -142,7 +132,6 @@ function ShopContent() {
     setSearchQuery("");
     setMaxPrice(10000);
     setInStockOnly(false);
-    setOnlyCompatible(false);
     setMinRating(0);
     setSortOption("popular");
     setCurrentPage(1);
@@ -170,21 +159,6 @@ function ShopContent() {
               {t("shop.showing")} ({sortedProducts.length})
             </p>
           </div>
-
-          {/* Active Vehicle Bar */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsVehicleModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017] transition shadow-md"
-            >
-              <Car className="h-4 w-4 text-[#D4A017] shrink-0" />
-              <span>
-                {selectedVehicle
-                  ? `${t("vehicle.active")}: ${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}`
-                  : t("hero.findVehicle")}
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* Search Bar & Mobile Filter Trigger */}
@@ -203,11 +177,11 @@ function ShopContent() {
             />
           </div>
 
-          <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+          <div className="flex flex-wrap items-center justify-between w-full sm:w-auto gap-2 sm:gap-4">
             {/* Mobile Filter Toggle */}
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-              className="lg:hidden flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017]"
+              className="lg:hidden flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-white hover:border-[#D4A017]"
             >
               <SlidersHorizontal className="h-4 w-4 text-[#D4A017]" />
               <span>{t("shop.filters")}</span>
@@ -271,23 +245,6 @@ function ShopContent() {
                   {t("shop.reset")} <RefreshCw className="h-3 w-3" />
                 </button>
               </div>
-
-              {/* Vehicle Compatibility Filter */}
-              {selectedVehicle && (
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={onlyCompatible}
-                      onChange={(e) => setOnlyCompatible(e.target.checked)}
-                      className="rounded accent-[#D4A017]"
-                    />
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300">
-                      {t("shop.fitsMyCar")}
-                    </span>
-                  </label>
-                </div>
-              )}
 
               {/* Category Filter */}
               <div>
@@ -402,7 +359,7 @@ function ShopContent() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="mt-12 flex items-center justify-center gap-2">
+                  <div className="mt-12 flex flex-wrap items-center justify-center gap-2">
                     <button
                       disabled={currentPage === 1}
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

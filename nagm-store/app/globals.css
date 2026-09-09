@@ -4,14 +4,26 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
-  * {
+  *, ::before, ::after {
+    box-sizing: border-box;
     border-color: var(--border, rgba(128, 128, 128, 0.2));
+  }
+  html {
+    @apply font-sans bg-slate-50 dark:bg-[#111111];
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
   }
   body {
     @apply bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 transition-colors duration-300;
-  }
-  html {
-    @apply font-sans;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
   }
   html[dir="rtl"] {
     font-family: var(--font-cairo), system-ui, sans-serif;
