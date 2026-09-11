@@ -11,6 +11,8 @@ import { CheckCircle2, Printer, Package, ShoppingBag, RefreshCw } from "lucide-r
 import { Order } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function OrderSuccessPage() {
   const router = useRouter();
@@ -35,11 +37,35 @@ export default function OrderSuccessPage() {
           return;
         }
       }
-      setOrder(null);
     } catch (e) {
       console.error(e);
-      setOrder(null);
     }
+
+    // Fallback: Query Firestore for user's latest order
+    let isMounted = true;
+    const fetchLatestFirestoreOrder = async () => {
+      try {
+        const q = query(
+          collection(db, "orders"),
+          where("userId", "==", user.uid)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty && isMounted) {
+          const list: Order[] = [];
+          snap.forEach((d) => list.push({ id: d.id, ...(d.data() as any) }));
+          list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          if (list.length > 0) {
+            setOrder(list[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching latest order from Firestore:", err);
+      }
+    };
+    fetchLatestFirestoreOrder();
+    return () => {
+      isMounted = false;
+    };
   }, [authLoading, user, router]);
 
   const handlePrint = () => {

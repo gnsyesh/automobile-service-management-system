@@ -29,6 +29,9 @@ import { useLanguage, languages } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { products } from "@/data/products";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Product } from "@/types";
 
 export default function Navbar() {
   const router = useRouter();
@@ -64,6 +67,28 @@ export default function Navbar() {
     }
   };
 
+  const [liveProducts, setLiveProducts] = useState<Product[]>(products);
+
+  useEffect(() => {
+    let isMounted = true;
+    getDocs(collection(db, "products"))
+      .then((snap) => {
+        if (!snap.empty && isMounted) {
+          const firestoreList: Product[] = [];
+          snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
+          const firestoreIds = new Set(firestoreList.map((p) => p.id));
+          setLiveProducts([
+            ...firestoreList,
+            ...products.filter((p) => !firestoreIds.has(p.id)),
+          ]);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const navLinks = [
     { name: t("nav.home"), href: "/" },
     { name: t("nav.shop"), href: "/shop" },
@@ -74,7 +99,7 @@ export default function Navbar() {
   ];
 
   const searchResults = searchQuery.trim()
-    ? products.filter(
+    ? liveProducts.filter(
         (p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||

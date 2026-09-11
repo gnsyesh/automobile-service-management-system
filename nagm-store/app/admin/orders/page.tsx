@@ -54,14 +54,15 @@ export default function AdminOrdersPage() {
     try {
       await updateDoc(doc(db, "orders", orderId), {
         status: newStatus,
+        orderStatus: newStatus,
         updatedAt: new Date().toISOString(),
       });
 
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, orderStatus: newStatus } : o))
       );
       if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
+        setSelectedOrder({ ...selectedOrder, status: newStatus, orderStatus: newStatus });
       }
 
       showToast(

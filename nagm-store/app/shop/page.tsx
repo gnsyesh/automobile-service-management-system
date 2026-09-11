@@ -13,6 +13,9 @@ import { useVehicle } from "@/context/VehicleContext";
 import { useAuth } from "@/context/AuthContext";
 import { TranslationKey } from "@/locales/en";
 import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Product } from "@/types";
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -54,9 +57,37 @@ function ShopContent() {
   const { selectedVehicle, isCompatible, clearVehicle, setIsVehicleModalOpen } = useVehicle();
   const [exactFitOnly, setExactFitOnly] = useState<boolean>(true);
 
+  // Live Products State (Merged with Firestore catalogue)
+  const [allProducts, setAllProducts] = useState<Product[]>(products);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveProducts = async () => {
+      try {
+        const snap = await getDocs(collection(db, "products"));
+        if (!snap.empty && isMounted) {
+          const firestoreList: Product[] = [];
+          snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
+          const firestoreIds = new Set(firestoreList.map((p) => p.id));
+          const merged = [
+            ...firestoreList,
+            ...products.filter((p) => !firestoreIds.has(p.id)),
+          ];
+          setAllProducts(merged);
+        }
+      } catch (err) {
+        // Fallback gracefully to static catalog if offline or permissions
+      }
+    };
+    fetchLiveProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Filter Logic
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    return allProducts.filter((p) => {
       // Vehicle Exact-Fit Filter
       if (selectedVehicle && exactFitOnly) {
         if (!isCompatible(p)) return false;
@@ -326,11 +357,11 @@ function ShopContent() {
                     }`}
                   >
                     <span>{t("shop.allCategories")}</span>
-                    <span className="text-[10px] opacity-70">{products.length}</span>
+                    <span className="text-[10px] opacity-70">{allProducts.length}</span>
                   </button>
                   {categories.map((cat) => {
                     const isSelected = categoryFilter === cat.slug;
-                    const count = products.filter((p) => p.category === cat.slug || p.subcategory === cat.slug).length;
+                    const count = allProducts.filter((p) => p.category === cat.slug || p.subcategory === cat.slug).length;
                     const catKey = `cat.${cat.slug}` as TranslationKey;
                     const catName = t(catKey) !== catKey ? t(catKey) : cat.name;
 

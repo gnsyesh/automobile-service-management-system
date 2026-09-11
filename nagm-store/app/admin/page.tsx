@@ -23,10 +23,16 @@ import {
   ChevronDown,
   BarChart3,
   Percent,
+  DollarSign,
+  UserCheck,
+  ShieldCheck,
+  Sparkles,
+  Hash,
+  ArrowUpRight,
 } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Order, Product, DateFilterPreset } from "@/types";
+import { Order, Product, DateFilterPreset, UserProfile } from "@/types";
 import { products as localProducts } from "@/data/products";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -41,12 +47,19 @@ import {
   aggregateCategoryPerformance,
   getAvailableYears,
   getOrderDate,
+  getPurchasedUnitsCount,
+  getCustomerInsights,
+  CustomerInsights,
 } from "@/lib/analytics";
 
 export default function AdminDashboardPage() {
   const { t, language } = useLanguage();
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Core data states
   const [orders, setOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<UserProfile[]>([]);
   const [customersCount, setCustomersCount] = useState<number>(0);
   const [productsList, setProductsList] = useState<Product[]>(localProducts);
 
@@ -77,9 +90,14 @@ export default function AdminDashboardPage() {
       });
       setOrders(fetchedOrders);
 
-      // 2. Users count
+      // 2. Customers / Users
       const usersSnapshot = await getDocs(collection(db, "users"));
-      setCustomersCount(usersSnapshot.size);
+      const userList: UserProfile[] = [];
+      usersSnapshot.forEach((docSnap) => {
+        userList.push({ uid: docSnap.id, ...(docSnap.data() as any) });
+      });
+      setCustomers(userList);
+      setCustomersCount(userList.length);
 
       // 3. Products
       const prodsSnapshot = await getDocs(collection(db, "products"));
@@ -92,6 +110,8 @@ export default function AdminDashboardPage() {
       } else {
         setProductsList(localProducts);
       }
+
+      setLastUpdated(new Date());
     } catch (e) {
       console.error("Error fetching admin dashboard data:", e);
     } finally {
@@ -118,7 +138,6 @@ export default function AdminDashboardPage() {
   // Previous period range for comparison
   const previousRange = useMemo(() => {
     if (!compareEnabled) return null;
-    const now = new Date();
 
     if (preset === "this_month") {
       return getDateRangeForPreset("last_month");
@@ -168,7 +187,17 @@ export default function AdminDashboardPage() {
     return calculatePeriodMetrics(currentOrders);
   }, [currentOrders]);
 
-  // Other quick counts
+  // Customer insights & repeat purchase metrics
+  const customerInsights = useMemo(() => {
+    return getCustomerInsights(customers, currentOrders, currentRange);
+  }, [customers, currentOrders, currentRange]);
+
+  // Total physical part units sold in period
+  const purchasedUnitsCount = useMemo(() => {
+    return getPurchasedUnitsCount(currentOrders);
+  }, [currentOrders]);
+
+  // Operational counts
   const pendingOrdersCount = orders.filter(
     (o) => o.status === "Pending" || o.status === "Processing"
   ).length;
@@ -210,7 +239,7 @@ export default function AdminDashboardPage() {
     return max > 0 ? max : 10000;
   }, [yearlyRevenueData]);
 
-  // Month Names for dropdown
+  // Month Names
   const monthLabels = [
     { index: 0, en: "January", ar: "يناير" },
     { index: 1, en: "February", ar: "فبراير" },
@@ -226,31 +255,103 @@ export default function AdminDashboardPage() {
     { index: 11, en: "December", ar: "ديسمبر" },
   ];
 
+  // Friendly human-readable label for selected timeframe
+  const periodLabel = useMemo(() => {
+    switch (preset) {
+      case "today":
+        return language === "ar" ? "اليوم" : "Today";
+      case "yesterday":
+        return language === "ar" ? "أمس" : "Yesterday";
+      case "this_week":
+        return language === "ar" ? "هذا الأسبوع" : "This Week";
+      case "last_week":
+        return language === "ar" ? "الأسبوع الماضي" : "Last Week";
+      case "this_month":
+        return language === "ar" ? "هذا الشهر" : "This Month";
+      case "last_month":
+        return language === "ar" ? "الشهر الماضي" : "Last Month";
+      case "this_year":
+        return language === "ar" ? `عام ${new Date().getFullYear()}` : `Year ${new Date().getFullYear()}`;
+      case "last_year":
+        return language === "ar" ? `عام ${new Date().getFullYear() - 1}` : `Year ${new Date().getFullYear() - 1}`;
+      case "specific_month":
+        const mObj = monthLabels.find((m) => m.index === specificMonth);
+        const mName = language === "ar" ? mObj?.ar : mObj?.en;
+        return `${mName} ${specificYear}`;
+      case "specific_year":
+        return `${specificYear}`;
+      case "custom":
+        return customStart && customEnd ? `${customStart} → ${customEnd}` : (language === "ar" ? "فترة مخصصة" : "Custom Range");
+      case "all_time":
+        return language === "ar" ? "كامل الفترة (جميع السجلات)" : "All Time Records";
+      default:
+        return "";
+    }
+  }, [preset, specificMonth, specificYear, customStart, customEnd, language]);
+
+  // Baseline comparison label
+  const baselineLabel = useMemo(() => {
+    if (!compareEnabled) return "";
+    switch (preset) {
+      case "this_month":
+        return language === "ar" ? "الشهر الماضي" : "Last Month";
+      case "this_year":
+        return language === "ar" ? "العام الماضي" : "Last Year";
+      case "today":
+        return language === "ar" ? "أمس" : "Yesterday";
+      case "this_week":
+        return language === "ar" ? "الأسبوع الماضي" : "Last Week";
+      case "specific_month":
+        const prevM = specificMonth === 0 ? 11 : specificMonth - 1;
+        const prevY = specificMonth === 0 ? specificYear - 1 : specificYear;
+        const mObj = monthLabels.find((m) => m.index === prevM);
+        return `${language === "ar" ? mObj?.ar : mObj?.en} ${prevY}`;
+      case "specific_year":
+        return `${specificYear - 1}`;
+      default:
+        return language === "ar" ? "الفترة السابقة المماثلة" : "Prior Equivalent Period";
+    }
+  }, [compareEnabled, preset, specificMonth, specificYear, language]);
+
   const recentOrders = useMemo(() => orders.slice(0, 5), [orders]);
 
   return (
-    <div className="space-y-8 text-left rtl:text-right pb-12">
-      {/* Top Header */}
+    <div className="space-y-8 text-left rtl:text-right pb-14 max-w-full overflow-hidden">
+      {/* 1. Header with Executive Status & Quick Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-6">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
-            {t("admin.overview")}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4A017]/10 border border-[#D4A017]/30 text-[#D4A017] text-[11px] font-black uppercase tracking-wider mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{language === "ar" ? "مركز قيادة المتجر والبيانات الحية" : "Store Executive Control Center"}</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {t("admin.dashboard")}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1">
             {language === "ar"
-              ? "مؤشرات الأداء اللحظية، حركة المبيعات، ومقارنات الفترات الزمنية للمتجر"
-              : "Store executive KPIs, sales analytics, and comparative business intelligence"}
+              ? "متابعة المبيعات الحقيقية، حجم الطلبات، تفاعل العملاء، وأداء المنتجات اللحظي"
+              : "Live revenue analytics, customer order fulfillment, and real-time business performance"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* Last Updated Badge */}
+          {lastUpdated && (
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A1A1A] border border-slate-200 dark:border-[#2D2D2D] text-[11px] text-slate-500 dark:text-gray-400 font-medium">
+              <Clock className="h-3.5 w-3.5 text-[#D4A017]" />
+              <span>
+                {language === "ar" ? "آخر تحديث:" : "Updated:"}{" "}
+                {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          )}
+
           <button
             onClick={fetchDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] text-xs font-bold text-slate-700 dark:text-gray-300 hover:border-[#D4A017] transition shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1A1A1A] text-xs font-bold text-slate-700 dark:text-gray-300 hover:border-[#D4A017] hover:text-slate-900 dark:hover:text-white transition shadow-sm disabled:opacity-50"
+            title="Refresh Firestore Data"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#D4A017]" : ""}`} />
             <span>{language === "ar" ? "تحديث البيانات" : "Refresh Data"}</span>
@@ -266,27 +367,27 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Date Filter & Period Comparison Toolbar */}
-      <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Preset Selector */}
-          <div className="flex flex-wrap items-center gap-2">
+      {/* 2. Executive Timeframe & Baseline Comparison Command Bar */}
+      <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Timeframe Selector */}
+          <div className="flex flex-wrap items-center gap-2.5">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-[#D4A017]" />
-              {t("admin.selectPeriod")}:
+              <Calendar className="w-4 h-4 text-[#D4A017]" />
+              <span>{t("admin.selectPeriod")}:</span>
             </span>
 
             <select
               value={preset}
               onChange={(e) => setPreset(e.target.value as DateFilterPreset)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017] transition cursor-pointer"
             >
-              <option value="today">{t("admin.today")}</option>
-              <option value="yesterday">{t("admin.yesterday")}</option>
-              <option value="this_week">{t("admin.thisWeek")}</option>
-              <option value="last_week">{t("admin.lastWeek")}</option>
               <option value="this_month">{t("admin.thisMonth")}</option>
               <option value="last_month">{t("admin.lastMonth")}</option>
+              <option value="this_week">{t("admin.thisWeek")}</option>
+              <option value="last_week">{t("admin.lastWeek")}</option>
+              <option value="today">{t("admin.today")}</option>
+              <option value="yesterday">{t("admin.yesterday")}</option>
               <option value="this_year">{t("admin.thisYear")}</option>
               <option value="last_year">{t("admin.lastYear")}</option>
               <option value="specific_month">{t("admin.specificMonth")}</option>
@@ -295,13 +396,13 @@ export default function AdminDashboardPage() {
               <option value="all_time">{t("admin.allTime")}</option>
             </select>
 
-            {/* Specific Month & Year pickers */}
+            {/* Specific Month & Year dropdowns */}
             {preset === "specific_month" && (
               <div className="flex items-center gap-2">
                 <select
                   value={specificMonth}
                   onChange={(e) => setSpecificMonth(Number(e.target.value))}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                  className="px-3 py-2 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
                 >
                   {monthLabels.map((m) => (
                     <option key={m.index} value={m.index}>
@@ -313,7 +414,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={specificYear}
                   onChange={(e) => setSpecificYear(Number(e.target.value))}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                  className="px-3 py-2 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
                 >
                   {availableYears.map((y) => (
                     <option key={y} value={y}>
@@ -324,12 +425,12 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
-            {/* Specific Year picker */}
+            {/* Specific Year dropdown */}
             {preset === "specific_year" && (
               <select
                 value={specificYear}
                 onChange={(e) => setSpecificYear(Number(e.target.value))}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                className="px-3 py-2 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
               >
                 {availableYears.map((y) => (
                   <option key={y} value={y}>
@@ -346,29 +447,29 @@ export default function AdminDashboardPage() {
                   type="date"
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
-                  className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-semibold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
                 />
                 <span className="text-xs text-slate-400 font-bold">—</span>
                 <input
                   type="date"
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
-                  className="px-2.5 py-1 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-semibold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
                 />
               </div>
             )}
           </div>
 
           {/* Period Comparison Toggle */}
-          <div className="flex items-center gap-3">
-            <label className="relative inline-flex items-center cursor-pointer gap-2 select-none">
+          <div className="flex items-center gap-3 self-end lg:self-center">
+            <label className="relative inline-flex items-center cursor-pointer gap-2.5 select-none">
               <input
                 type="checkbox"
                 checked={compareEnabled}
                 onChange={(e) => setCompareEnabled(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-[#333] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:left-auto rtl:after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4A017]"></div>
+              <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-[#333] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] rtl:after:left-auto rtl:after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#D4A017]"></div>
               <span className="text-xs font-bold text-slate-700 dark:text-gray-300">
                 {t("admin.comparePeriods")}
               </span>
@@ -376,289 +477,459 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Comparison Details Ribbon */}
-        {compareEnabled && comparison && (
-          <div className="pt-3 border-t border-slate-100 dark:border-[#202020] flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-600 dark:text-gray-400">
+        {/* Active Timeframe Indicator & Comparison Ribbon */}
+        <div className="pt-3 border-t border-slate-100 dark:border-[#202020] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-gray-400">
             <span className="font-semibold text-slate-900 dark:text-white">
-              {language === "ar" ? "المقارنة مع الفترة السابقة:" : "Baseline Comparison:"}
+              {language === "ar" ? "الفترة المعروضة:" : "Viewing Data For:"}
             </span>
+            <span className="px-2.5 py-0.5 rounded-md bg-[#D4A017]/10 text-[#D4A017] font-bold border border-[#D4A017]/20">
+              {periodLabel}
+            </span>
+          </div>
 
-            {/* Revenue Diff */}
-            <div className="flex items-center gap-1.5">
-              <span>{t("admin.totalRevenue")}:</span>
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
+          {compareEnabled && comparison && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              <span className="text-slate-500 dark:text-gray-400 font-medium">
+                {language === "ar" ? `مقارنة بـ (${baselineLabel}):` : `vs (${baselineLabel}):`}
+              </span>
+
+              {/* Revenue Diff */}
+              <div
+                className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
                   comparison.revenueDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
                 }`}
               >
                 {comparison.revenueDiff >= 0 ? (
-                  <TrendingUp className="w-3.5 h-3.5" />
+                  <TrendingUp className="w-3 h-3" />
                 ) : (
-                  <TrendingDown className="w-3.5 h-3.5" />
+                  <TrendingDown className="w-3 h-3" />
                 )}
-                {comparison.revenueDiff >= 0 ? "+" : ""}
-                {comparison.revenueDiff.toLocaleString()} EGP ({comparison.revenuePct >= 0 ? "+" : ""}
-                {comparison.revenuePct}%)
-              </span>
-            </div>
+                <span>{comparison.revenueDiff >= 0 ? "+" : ""}{comparison.revenueDiff.toLocaleString()} EGP</span>
+                <span>({comparison.revenuePct >= 0 ? "+" : ""}{comparison.revenuePct}%)</span>
+              </div>
 
-            {/* Orders Diff */}
-            <div className="flex items-center gap-1.5">
-              <span>{t("admin.totalOrders")}:</span>
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
+              {/* Orders Diff */}
+              <div
+                className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
                   comparison.ordersDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
                 }`}
               >
-                {comparison.ordersDiff >= 0 ? (
-                  <TrendingUp className="w-3.5 h-3.5" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5" />
-                )}
-                {comparison.ordersDiff >= 0 ? "+" : ""}
-                {comparison.ordersDiff} ({comparison.ordersPct >= 0 ? "+" : ""}
-                {comparison.ordersPct}%)
+                <span>{language === "ar" ? "الطلبات:" : "Orders:"}</span>
+                <span>{comparison.ordersDiff >= 0 ? "+" : ""}{comparison.ordersDiff}</span>
+                <span>({comparison.ordersPct >= 0 ? "+" : ""}{comparison.ordersPct}%)</span>
+              </div>
+
+              {/* AOV Diff */}
+              <div
+                className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
+                  comparison.aovDiff >= 0
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                }`}
+              >
+                <span>{language === "ar" ? "متوسط السلة:" : "AOV:"}</span>
+                <span>{comparison.aovDiff >= 0 ? "+" : ""}{comparison.aovDiff.toLocaleString()} EGP</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Tier 1: Primary Financial & Sales KPIs (3 Prominent Cards) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+            {language === "ar" ? "الأداء المالي وحركة المبيعات" : "Financial & Sales Performance"}
+          </h2>
+          <span className="text-[11px] text-slate-400">
+            {language === "ar" ? "البيانات الفعلية من سجلات الطلبات" : "Real Firestore Orders Data"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Gross Revenue */}
+          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-white to-white dark:via-[#151515] dark:to-[#151515] p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-600 dark:text-gray-400 uppercase tracking-wider">
+                {t("admin.totalRevenue")}
               </span>
+              <div className="p-3 rounded-2xl bg-[#D4A017]/15 text-[#D4A017] shadow-inner">
+                <DollarSign className="h-5 w-5" />
+              </div>
             </div>
 
-            {/* AOV Diff */}
-            <div className="flex items-center gap-1.5">
-              <span>{t("admin.avgOrderValue")}:</span>
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
-                  comparison.aovDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {comparison.aovDiff >= 0 ? (
-                  <TrendingUp className="w-3.5 h-3.5" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5" />
-                )}
-                {comparison.aovDiff >= 0 ? "+" : ""}
-                {comparison.aovDiff.toLocaleString()} EGP ({comparison.aovPct >= 0 ? "+" : ""}
-                {comparison.aovPct}%)
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                {loading ? "..." : `${metrics.revenue.toLocaleString()} EGP`}
+              </div>
+
+              {compareEnabled && comparison ? (
+                <div className="mt-2.5 flex items-center gap-2 text-xs">
+                  <span
+                    className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                      comparison.revenueDiff >= 0
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {comparison.revenueDiff >= 0 ? (
+                      <TrendingUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <TrendingDown className="w-3.5 h-3.5" />
+                    )}
+                    {comparison.revenuePct >= 0 ? "+" : ""}{comparison.revenuePct}%
+                  </span>
+                  <span className="text-slate-500 dark:text-gray-400 text-[11px]">
+                    {language === "ar" ? `مقارنة بـ ${baselineLabel}` : `vs ${baselineLabel}`}
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-2 text-[11px] text-slate-500 dark:text-gray-400">
+                  {language === "ar" ? "باستثناء الطلبات الملغاة" : "Net revenue from non-cancelled orders"}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Card 2: Total Orders */}
+          <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-white to-white dark:via-[#151515] dark:to-[#151515] p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-600 dark:text-gray-400 uppercase tracking-wider">
+                {t("admin.totalOrders")}
               </span>
+              <div className="p-3 rounded-2xl bg-blue-500/15 text-blue-500 shadow-inner">
+                <ShoppingCart className="h-5 w-5" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                {loading ? "..." : metrics.ordersCount}
+              </div>
+
+              {compareEnabled && comparison ? (
+                <div className="mt-2.5 flex items-center gap-2 text-xs">
+                  <span
+                    className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                      comparison.ordersDiff >= 0
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {comparison.ordersDiff >= 0 ? (
+                      <TrendingUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <TrendingDown className="w-3.5 h-3.5" />
+                    )}
+                    {comparison.ordersPct >= 0 ? "+" : ""}{comparison.ordersPct}%
+                  </span>
+                  <span className="text-slate-500 dark:text-gray-400 text-[11px]">
+                    {language === "ar" ? `مقارنة بـ ${baselineLabel}` : `vs ${baselineLabel}`}
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-2 text-[11px] text-slate-500 dark:text-gray-400">
+                  {language === "ar" ? "إجمالي الطلبات المؤكدة في الفترة" : "Qualifying orders received"}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3: Average Order Value */}
+          <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-white to-white dark:via-[#151515] dark:to-[#151515] p-6 shadow-sm dark:shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-600 dark:text-gray-400 uppercase tracking-wider">
+                {t("admin.avgOrderValue")}
+              </span>
+              <div className="p-3 rounded-2xl bg-purple-500/15 text-purple-500 shadow-inner">
+                <Percent className="h-5 w-5" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                {loading ? "..." : `${metrics.averageOrderValue.toLocaleString()} EGP`}
+              </div>
+
+              {compareEnabled && comparison ? (
+                <div className="mt-2.5 flex items-center gap-2 text-xs">
+                  <span
+                    className={`font-bold inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                      comparison.aovDiff >= 0
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-red-500/10 text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {comparison.aovDiff >= 0 ? (
+                      <TrendingUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <TrendingDown className="w-3.5 h-3.5" />
+                    )}
+                    {comparison.aovPct >= 0 ? "+" : ""}{comparison.aovPct}%
+                  </span>
+                  <span className="text-slate-500 dark:text-gray-400 text-[11px]">
+                    {language === "ar" ? `مقارنة بـ ${baselineLabel}` : `vs ${baselineLabel}`}
+                  </span>
+                </div>
+              ) : (
+                <p className="mt-2 text-[11px] text-slate-500 dark:text-gray-400">
+                  {language === "ar" ? "متوسط قيمة سلة المشتريات للطلب" : "Average customer expenditure per order"}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Tier 2: Store Operations & Health (4 High-Utility Cards) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+            {language === "ar" ? "حالة العمليات والمخزون والعملاء" : "Operations, Inventory & Customers"}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Op 1: Customer Accounts */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
+                {t("admin.totalCustomers")}
+              </span>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                <Users className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+              {loading ? "..." : customersCount}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-[#222]">
+              <span>{language === "ar" ? "مشترين نشطين:" : "Active buyers:"}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {customerInsights.activeBuyersInPeriod}
+              </span>
+            </div>
+          </div>
+
+          {/* Op 2: Physical Units Sold */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
+                {language === "ar" ? "القطع المباعة بالفترة" : "Units Sold in Period"}
+              </span>
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
+                <Package className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+              {loading ? "..." : purchasedUnitsCount}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-[#222]">
+              <span>{language === "ar" ? "قطع غيار مختلفة:" : "Distinct products:"}</span>
+              <span className="font-bold text-slate-700 dark:text-gray-300">
+                {topProductsData.length}
+              </span>
+            </div>
+          </div>
+
+          {/* Op 3: Pending Fulfillment */}
+          <div className="rounded-2xl border border-orange-500/30 bg-white dark:bg-[#151515] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
+                {t("admin.pendingOrders")}
+              </span>
+              <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
+                <Clock className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-black text-orange-500">
+              {loading ? "..." : pendingOrdersCount}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 dark:border-[#222]">
+              <span className="text-slate-500 dark:text-gray-400">{language === "ar" ? "بحاجة للتجهيز" : "Needs dispatch"}</span>
+              <Link
+                href="/admin/orders"
+                className="font-bold text-[#D4A017] hover:underline inline-flex items-center gap-0.5"
+              >
+                <span>{language === "ar" ? "متابعة" : "Fulfill"}</span>
+                <ArrowRight className="w-3 h-3 rtl:rotate-180" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Op 4: Low Stock Inventory */}
+          <div className="rounded-2xl border border-rose-500/30 bg-white dark:bg-[#151515] p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
+                {t("admin.lowStock")}
+              </span>
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-3 text-2xl font-black text-rose-600 dark:text-rose-400">
+              {loading ? "..." : lowStockCount}
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 dark:border-[#222]">
+              <span className="text-slate-500 dark:text-gray-400">{language === "ar" ? "المخزون ≤ 5 قطع" : "Stock ≤ 5 units"}</span>
+              <Link
+                href="/admin/products"
+                className="font-bold text-[#D4A017] hover:underline inline-flex items-center gap-0.5"
+              >
+                <span>{language === "ar" ? "فحص القطع" : "Catalog"}</span>
+                <ArrowRight className="w-3 h-3 rtl:rotate-180" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Customer Activity & Purchase Behavior Panel */}
+      <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#252525] pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
+                {language === "ar" ? "رؤى العملاء وسلوك الشراء" : "Customer Insights & Behavior"}
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+              {language === "ar" ? "تحليل قاعدة العملاء والطلبات الفعلية" : "Customer Base & Purchasing Activity"}
+            </h3>
+          </div>
+
+          <Link
+            href="/admin/customers"
+            className="text-xs font-bold text-[#D4A017] hover:underline inline-flex items-center gap-1"
+          >
+            <span>{language === "ar" ? "إدارة جميع العملاء" : "View All Customers"}</span>
+            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          </Link>
+        </div>
+
+        {/* Customer Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1C1C1C] border border-slate-100 dark:border-[#282828] space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">
+              {language === "ar" ? "إجمالي الحسابات المسجلة" : "Total Registered Accounts"}
+            </span>
+            <div className="text-xl font-black text-slate-900 dark:text-white">
+              {customerInsights.totalRegistered}
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {language === "ar" ? "المسجلين في قاعدة البيانات" : "In Firebase Users Collection"}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1C1C1C] border border-slate-100 dark:border-[#282828] space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">
+              {language === "ar" ? "مشترين نشطين بالفترة" : "Active Buyers in Period"}
+            </span>
+            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+              {customerInsights.activeBuyersInPeriod}
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {language === "ar" ? "قاموا بطلب واحد على الأقل" : "Placed at least 1 order"}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1C1C1C] border border-slate-100 dark:border-[#282828] space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">
+              {language === "ar" ? "معدل تكرار الشراء" : "Repeat Purchase Rate"}
+            </span>
+            <div className="text-xl font-black text-[#D4A017]">
+              {customerInsights.repeatCustomerRate}%
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {customerInsights.repeatCustomersCount}{" "}
+              {language === "ar" ? "عملاء كرروا الشراء" : "repeat buyers in period"}
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1C1C1C] border border-slate-100 dark:border-[#282828] space-y-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">
+              {language === "ar" ? "تسجيلات جديدة بالفترة" : "New Signups in Period"}
+            </span>
+            <div className="text-xl font-black text-blue-600 dark:text-blue-400">
+              {customerInsights.newCustomersInPeriod}
+            </div>
+            <p className="text-[10px] text-slate-400">
+              {language === "ar" ? "انضموا للمتجر خلال التاريخ المحدد" : "Registered within selected range"}
+            </p>
+          </div>
+        </div>
+
+        {/* Top Spending Customers Leaderboard */}
+        {customerInsights.topCustomers.length > 0 && (
+          <div className="pt-2">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-3">
+              {language === "ar" ? "أعلى العملاء شراءً في هذه الفترة" : "Top Purchasing Customers in Selected Timeframe"}
+            </h4>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left rtl:text-right">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-[#282828] text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="pb-2.5 pr-4 rtl:pr-0 rtl:pl-4">Customer Name</th>
+                    <th className="pb-2.5 pr-4 rtl:pr-0 rtl:pl-4">Contact</th>
+                    <th className="pb-2.5 pr-4 rtl:pr-0 rtl:pl-4 text-center">Orders</th>
+                    <th className="pb-2.5 text-right rtl:text-left">Total Spent</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-[#252525]">
+                  {customerInsights.topCustomers.map((cust, idx) => (
+                    <tr key={cust.uid || idx} className="hover:bg-slate-50 dark:hover:bg-[#1C1C1C] transition">
+                      <td className="py-3 pr-4 rtl:pr-0 rtl:pl-4 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#D4A017]/10 text-[#D4A017] flex items-center justify-center font-bold text-[10px]">
+                          #{idx + 1}
+                        </div>
+                        <span>{cust.name}</span>
+                      </td>
+                      <td className="py-3 pr-4 rtl:pr-0 rtl:pl-4 text-slate-500 dark:text-gray-400">
+                        {cust.email || cust.phone || "—"}
+                      </td>
+                      <td className="py-3 pr-4 rtl:pr-0 rtl:pl-4 text-center font-bold text-slate-900 dark:text-white">
+                        {cust.ordersCount}
+                      </td>
+                      <td className="py-3 text-right rtl:text-left font-black text-[#D4A017]">
+                        {cust.totalSpent.toLocaleString()} EGP
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
       </div>
 
-      {/* Primary KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Card 1: Total Revenue */}
-        <div className="rounded-2xl border bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-5 sm:p-6 border-amber-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.totalRevenue")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-[#D4A017] shadow-sm">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {loading ? "..." : `${metrics.revenue.toLocaleString()} EGP`}
-          </div>
-          {compareEnabled && comparison ? (
-            <div className="mt-2 flex items-center gap-1.5 text-xs">
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
-                  comparison.revenueDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {comparison.revenueDiff >= 0 ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {comparison.revenuePct >= 0 ? "+" : ""}
-                {comparison.revenuePct}%
-              </span>
-              <span className="text-slate-400 dark:text-gray-500">
-                {language === "ar" ? "مقارنة بالفترة السابقة" : "vs previous period"}
-              </span>
-            </div>
-          ) : (
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-gray-500">
-              {language === "ar" ? "باستثناء الطلبات الملغاة" : "Excludes cancelled orders"}
-            </p>
-          )}
-        </div>
-
-        {/* Card 2: Total Orders */}
-        <div className="rounded-2xl border bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-5 sm:p-6 border-blue-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.totalOrders")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 shadow-sm">
-              <ShoppingCart className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {loading ? "..." : metrics.ordersCount}
-          </div>
-          {compareEnabled && comparison ? (
-            <div className="mt-2 flex items-center gap-1.5 text-xs">
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
-                  comparison.ordersDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {comparison.ordersDiff >= 0 ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {comparison.ordersPct >= 0 ? "+" : ""}
-                {comparison.ordersPct}%
-              </span>
-              <span className="text-slate-400 dark:text-gray-500">
-                {language === "ar" ? "مقارنة بالفترة السابقة" : "vs previous period"}
-              </span>
-            </div>
-          ) : (
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-gray-500">
-              {language === "ar" ? "إجمالي الطلبات في الفترة" : "Orders placed in timeframe"}
-            </p>
-          )}
-        </div>
-
-        {/* Card 3: Average Order Value (AOV) */}
-        <div className="rounded-2xl border bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-5 sm:p-6 border-purple-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.avgOrderValue")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 shadow-sm">
-              <Percent className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {loading ? "..." : `${metrics.averageOrderValue.toLocaleString()} EGP`}
-          </div>
-          {compareEnabled && comparison ? (
-            <div className="mt-2 flex items-center gap-1.5 text-xs">
-              <span
-                className={`font-bold inline-flex items-center gap-0.5 ${
-                  comparison.aovDiff >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {comparison.aovDiff >= 0 ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {comparison.aovPct >= 0 ? "+" : ""}
-                {comparison.aovPct}%
-              </span>
-              <span className="text-slate-400 dark:text-gray-500">
-                {language === "ar" ? "مقارنة بالفترة السابقة" : "vs previous period"}
-              </span>
-            </div>
-          ) : (
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-gray-500">
-              {language === "ar" ? "متوسط قيمة سلة المشتريات" : "Revenue per qualifying order"}
-            </p>
-          )}
-        </div>
-
-        {/* Card 4: Total Customers */}
-        <div className="rounded-2xl border bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-5 sm:p-6 border-emerald-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.totalCustomers")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 shadow-sm">
-              <Users className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {loading ? "..." : customersCount}
-          </div>
-          <p className="mt-2 text-[11px] text-slate-400 dark:text-gray-500">
-            {metrics.totalCustomers}{" "}
-            {language === "ar" ? "عميل نشط في هذه الفترة" : "active customers in period"}
-          </p>
-        </div>
-
-        {/* Card 5: Low Stock Alerts */}
-        <div className="rounded-2xl border bg-gradient-to-br from-rose-500/10 to-rose-600/5 p-5 sm:p-6 border-rose-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.lowStock")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 shadow-sm">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
-            {loading ? "..." : lowStockCount}
-          </div>
-          <Link
-            href="/admin/products"
-            className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#D4A017] hover:underline"
-          >
-            <span>{language === "ar" ? "فحص المخزون والقطع" : "Inspect Inventory"}</span>
-            <ArrowRight className="w-3 h-3 rtl:rotate-180" />
-          </Link>
-        </div>
-
-        {/* Card 6: Pending & Processing Orders */}
-        <div className="rounded-2xl border bg-gradient-to-br from-orange-500/10 to-orange-600/5 p-5 sm:p-6 border-orange-500/30 bg-white dark:bg-[#151515] shadow-sm dark:shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-gray-400 uppercase tracking-wider">
-              {t("admin.pendingOrders")}
-            </span>
-            <div className="p-2.5 rounded-xl bg-orange-500/10 text-orange-500 shadow-sm">
-              <Clock className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 text-2xl sm:text-3xl font-black text-orange-500">
-            {loading ? "..." : pendingOrdersCount}
-          </div>
-          <Link
-            href="/admin/orders"
-            className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#D4A017] hover:underline"
-          >
-            <span>{language === "ar" ? "متابعة الشحن والتوصيل" : "Manage Fulfillment"}</span>
-            <ArrowRight className="w-3 h-3 rtl:rotate-180" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Visual Analytics & Charts Section */}
+      {/* 6. Charts Row 1: Sales Distribution & Multi-Year Growth */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Revenue by Month (12-Month Bar Chart) */}
-        <div className="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm dark:shadow-xl flex flex-col justify-between">
+        {/* Chart 1: Monthly Revenue Trend (12-Month Calendar Bar Chart) */}
+        <div className="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#252525] pb-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
                 {t("admin.revenueByMonth")}
               </span>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                 {language === "ar"
                   ? `توزيع الإيرادات الشهرية لعام ${chartYear}`
                   : `Monthly Revenue Distribution for ${chartYear}`}
-              </h2>
+              </h3>
             </div>
 
             <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium">Year:</span>
               <select
                 value={chartYear}
                 onChange={(e) => setChartYear(Number(e.target.value))}
-                className="px-3 py-1 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#333] bg-slate-50 dark:bg-[#202020] text-xs font-bold text-slate-800 dark:text-gray-200 focus:outline-none focus:border-[#D4A017]"
               >
                 {availableYears.map((y) => (
                   <option key={y} value={y}>
@@ -678,13 +949,15 @@ export default function AdminDashboardPage() {
                     ? Math.max(Math.round((d.revenue / maxMonthlyRevenue) * 100), 4)
                     : 4;
 
+                const isPeak = d.revenue > 0 && d.revenue === maxMonthlyRevenue;
+
                 return (
                   <div
                     key={d.monthIndex}
                     className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end"
                   >
                     {/* Tooltip on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap shadow-lg">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg pointer-events-none whitespace-nowrap shadow-xl border border-slate-700">
                       {d.revenue.toLocaleString()} EGP • {d.ordersCount} orders
                     </div>
 
@@ -692,14 +965,22 @@ export default function AdminDashboardPage() {
                     <div
                       style={{ height: `${heightPct}%` }}
                       className={`w-full rounded-t-md transition-all duration-500 ${
-                        d.revenue > 0
-                          ? "bg-[#D4A017] group-hover:bg-[#b88a14]"
+                        isPeak
+                          ? "bg-[#D4A017] shadow-[0_0_12px_rgba(212,160,23,0.5)]"
+                          : d.revenue > 0
+                          ? "bg-[#8B3A2E] group-hover:bg-[#a34436]"
                           : "bg-slate-100 dark:bg-[#252525]"
                       }`}
                     />
 
                     {/* Month Label */}
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 mt-1">
+                    <span
+                      className={`text-[10px] font-semibold mt-1 ${
+                        isPeak
+                          ? "text-[#D4A017] font-bold"
+                          : "text-slate-500 dark:text-gray-400"
+                      }`}
+                    >
                       {d.monthName}
                     </span>
                   </div>
@@ -708,24 +989,24 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#202020] flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
-              <span>{language === "ar" ? "أعلى شهر:" : "Peak month:"} {maxMonthlyRevenue.toLocaleString()} EGP</span>
+              <span>{language === "ar" ? "أعلى شهر:" : "Peak month:"} <strong className="text-[#D4A017]">{maxMonthlyRevenue.toLocaleString()} EGP</strong></span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#D4A017]"></span>
-                <span>{language === "ar" ? "إيراد مبيعات مؤكدة" : "Gross Qualifying Revenue"}</span>
+                <span>{language === "ar" ? "مبيعات مؤكدة" : "Qualifying Orders Revenue"}</span>
               </span>
             </div>
           </div>
         </div>
 
-        {/* Chart 2: Multi-Year Revenue Trend */}
-        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm dark:shadow-xl flex flex-col justify-between">
+        {/* Chart 2: Multi-Year Revenue Progression */}
+        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm flex flex-col justify-between">
           <div className="border-b border-slate-100 dark:border-[#252525] pb-4">
             <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
               {t("admin.revenueByYear")}
             </span>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
               {language === "ar" ? "النمو السنوي للمبيعات" : "Annual Sales Progress"}
-            </h2>
+            </h3>
           </div>
 
           <div className="py-6 space-y-4 flex-1 flex flex-col justify-center">
@@ -735,7 +1016,7 @@ export default function AdminDashboardPage() {
                 <div key={y.year} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-bold">
                     <span className="text-slate-800 dark:text-gray-200">{y.year}</span>
-                    <span className="text-[#D4A017]">{y.revenue.toLocaleString()} EGP</span>
+                    <span className="text-[#D4A017] font-black">{y.revenue.toLocaleString()} EGP</span>
                   </div>
                   <div className="w-full h-3 bg-slate-100 dark:bg-[#252525] rounded-full overflow-hidden">
                     <div
@@ -744,7 +1025,7 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div className="text-[10px] text-slate-400 dark:text-gray-500 text-right rtl:text-left">
-                    {y.ordersCount} {language === "ar" ? "طلب ناجح" : "qualifying orders"}
+                    {y.ordersCount} {language === "ar" ? "طلب مؤكد" : "qualifying orders"}
                   </div>
                 </div>
               );
@@ -760,20 +1041,20 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Second Analytics Row: Top Products & Order Status Breakdown */}
+      {/* 7. Charts Row 2: Top Selling Parts & Order Lifecycle */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 3: Top-Selling Products (Top 5 / Top 10 Switcher) */}
-        <div className="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm dark:shadow-xl space-y-4">
+        {/* Chart 3: Top-Selling Automotive Parts (Top 5 / Top 10 Switcher) */}
+        <div className="lg:col-span-2 rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#252525] pb-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
                 {t("admin.topProducts")}
               </span>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                 {language === "ar"
                   ? `أفضل القطع والمنتجات مبيعاً (${topLimit})`
                   : `Top-Selling Automotive Parts (Top ${topLimit})`}
-              </h2>
+              </h3>
             </div>
 
             {/* Switch between Top 5 and Top 10 */}
@@ -850,14 +1131,14 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Chart 4: Order Status Breakdown */}
-        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm dark:shadow-xl flex flex-col justify-between">
+        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm flex flex-col justify-between">
           <div className="border-b border-slate-100 dark:border-[#252525] pb-4">
             <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
               {t("admin.orderStatusBreakdown")}
             </span>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
               {language === "ar" ? "حالة تدفق الطلبات" : "Order Lifecycle Status"}
-            </h2>
+            </h3>
           </div>
 
           <div className="py-6 space-y-4 flex-1 flex flex-col justify-center">
@@ -886,7 +1167,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="pt-3 border-t border-slate-100 dark:border-[#202020] text-xs text-slate-500 dark:text-gray-400 flex items-center justify-between">
-            <span>{language === "ar" ? "إجمالي الطلبات:" : "Total Orders:"}</span>
+            <span>{language === "ar" ? "إجمالي الطلبات المسجلة:" : "Total Registered Orders:"}</span>
             <span className="font-bold text-slate-900 dark:text-white">
               {orderStatusData.reduce((s, d) => s + d.count, 0)}
             </span>
@@ -894,17 +1175,17 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Category Performance Breakdown */}
+      {/* 8. Part Category Performance Breakdown */}
       {categoryData.length > 0 && (
-        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm dark:shadow-xl space-y-4">
+        <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 shadow-sm space-y-4">
           <div className="border-b border-slate-100 dark:border-[#252525] pb-4 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
                 {t("admin.categoryPerformance")}
               </span>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
                 {language === "ar" ? "أداء الأقسام وقطع الغيار" : "Revenue by Part Category"}
-              </h2>
+              </h3>
             </div>
             <Layers className="w-5 h-5 text-[#D4A017]" />
           </div>
@@ -930,13 +1211,18 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Recent Orders Section */}
-      <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 sm:p-8 shadow-sm dark:shadow-xl space-y-6">
+      {/* 9. Recent Customer Orders Section */}
+      <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#2D2D2D] pb-4">
-          <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-[#D4A017]" />
-            <span>{language === "ar" ? "أحدث الطلبات الواردة" : "Recent Customer Orders"}</span>
-          </h2>
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-[#D4A017]" />
+              <span>{language === "ar" ? "أحدث الطلبات الواردة" : "Recent Customer Orders"}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+              {language === "ar" ? "آخر الطلبات المسجلة من العملاء في المتجر" : "Latest customer purchases placed through the store"}
+            </p>
+          </div>
 
           <Link
             href="/admin/orders"
@@ -959,57 +1245,68 @@ export default function AdminDashboardPage() {
                   <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Order ID</th>
                   <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Customer</th>
                   <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Date</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Items</th>
                   <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Total</th>
                   <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Status</th>
                   <th className="pb-3 text-right rtl:text-left">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-[#2D2D2D]">
-                {recentOrders.map((ord) => (
-                  <tr key={ord.id} className="hover:bg-slate-50 dark:hover:bg-[#1C1C1C] transition">
-                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 font-mono font-bold text-[#D4A017]">
-                      {ord.id}
-                    </td>
-                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4">
-                      <div className="font-bold text-slate-900 dark:text-white">
-                        {ord.shippingAddress?.fullName || ord.userEmail || "Customer"}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-gray-400">
-                        {ord.shippingAddress?.phone || ord.userEmail}
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 text-slate-600 dark:text-gray-300">
-                      {ord.orderDate || ord.createdAt?.slice(0, 10)}
-                    </td>
-                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 font-bold text-slate-900 dark:text-white">
-                      {ord.total?.toLocaleString()} EGP
-                    </td>
-                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                          ord.status === "Delivered"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                            : ord.status === "Shipped"
-                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30"
-                            : ord.status === "Cancelled"
-                            ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
-                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                        }`}
-                      >
-                        {ord.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right rtl:text-left">
-                      <Link
-                        href="/admin/orders"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2D2D] hover:border-[#D4A017] text-slate-700 dark:text-gray-300 font-semibold transition"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>{language === "ar" ? "إدارة" : "Manage"}</span>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {recentOrders.map((ord) => {
+                  const itemsCount = Array.isArray(ord.items)
+                    ? ord.items.reduce((s, i) => s + (i.quantity || 1), 0)
+                    : 1;
+
+                  return (
+                    <tr key={ord.id} className="hover:bg-slate-50 dark:hover:bg-[#1C1C1C] transition">
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 font-mono font-bold text-[#D4A017]">
+                        {ord.id}
+                      </td>
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {ord.shippingAddress?.fullName || ord.userEmail || "Customer"}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-gray-400">
+                          {ord.shippingAddress?.phone || ord.userEmail}
+                        </div>
+                      </td>
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 text-slate-600 dark:text-gray-300">
+                        {ord.orderDate || ord.createdAt?.slice(0, 10)}
+                      </td>
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 text-slate-600 dark:text-gray-300">
+                        <span className="font-bold text-slate-800 dark:text-gray-200">{itemsCount}</span>{" "}
+                        {language === "ar" ? "قطع" : "parts"}
+                      </td>
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4 font-bold text-slate-900 dark:text-white">
+                        {ord.total?.toLocaleString()} EGP
+                      </td>
+                      <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                            ord.status === "Delivered"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                              : ord.status === "Shipped"
+                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                              : ord.status === "Cancelled"
+                              ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
+                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                          }`}
+                        >
+                          {ord.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right rtl:text-left">
+                        <Link
+                          href="/admin/orders"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2D2D2D] hover:border-[#D4A017] text-slate-700 dark:text-gray-300 font-semibold transition"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>{language === "ar" ? "إدارة" : "Manage"}</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

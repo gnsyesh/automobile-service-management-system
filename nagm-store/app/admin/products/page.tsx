@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   Package,
@@ -12,6 +12,11 @@ import {
   X,
   AlertTriangle,
   RefreshCw,
+  UploadCloud,
+  ImageIcon,
+  Loader2,
+  CheckCircle2,
+  Link2,
 } from "lucide-react";
 import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -20,6 +25,7 @@ import { products as localProducts } from "@/data/products";
 import { categories } from "@/data/categories";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export default function AdminProductsPage() {
   const { t, language } = useLanguage();
@@ -30,6 +36,13 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // Cloudinary Upload state
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Editing state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -73,6 +86,10 @@ export default function AdminProductsPage() {
 
   const openAddModal = () => {
     setEditingProduct(null);
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setIsDragging(false);
     setFormData({
       id: `prod-${Date.now()}`,
       name: "",
@@ -91,6 +108,10 @@ export default function AdminProductsPage() {
 
   const openEditModal = (p: Product) => {
     setEditingProduct(p);
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadError(null);
+    setIsDragging(false);
     setFormData({
       id: p.id,
       name: p.name,
@@ -107,8 +128,65 @@ export default function AdminProductsPage() {
     setIsModalOpen(true);
   };
 
+  const handleImageFileChange = async (file: File) => {
+    if (!file) return;
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    try {
+      const result = await uploadToCloudinary(file, {
+        onProgress: (percent) => {
+          setUploadProgress(percent);
+        },
+      });
+
+      setFormData((prev) => ({ ...prev, image: result.secure_url }));
+      showToast(
+        language === "ar"
+          ? "تم رفع الصورة إلى Cloudinary بنجاح!"
+          : "Image uploaded to Cloudinary successfully!",
+        "success"
+      );
+    } catch (err: any) {
+      const msg = err?.message || "Failed to upload image to Cloudinary.";
+      setUploadError(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageFileChange(e.dataTransfer.files[0]);
+    }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUploading) {
+      showToast(
+        language === "ar"
+          ? "يرجى الانتظار حتى يكتمل رفع الصورة."
+          : "Please wait for image upload to complete.",
+        "error"
+      );
+      return;
+    }
+
     if (!formData.name || !formData.price) {
       showToast("Please fill in required product fields.", "error");
       return;
@@ -408,14 +486,141 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-600 dark:text-gray-400 font-bold mb-1">Image URL</label>
-                <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#0E0E0E] text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
-                />
+              {/* Product Image Section: Cloudinary Upload + Manual URL + Preview */}
+              <div className="space-y-2 pt-1">
+                <label className="block text-slate-700 dark:text-gray-300 font-bold">
+                  {language === "ar" ? "صورة المنتج (Cloudinary)" : "Product Image (Cloudinary)"}
+                </label>
+
+                {/* Drag & Drop / Upload Box */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
+                  className={`relative border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${
+                    isDragging
+                      ? "border-[#D4A017] bg-[#D4A017]/10"
+                      : "border-slate-300 dark:border-[#2D2D2D] hover:border-[#D4A017]/60 bg-slate-50 dark:bg-[#111111]"
+                  } ${isUploading ? "opacity-60 cursor-not-allowed" : ""}`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleImageFileChange(e.target.files[0]);
+                      }
+                    }}
+                    accept="image/png,image/jpeg,image/webp,image/jpg,image/avif"
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8B3A2E]/10 text-[#8B3A2E] dark:bg-[#D4A017]/10 dark:text-[#D4A017]">
+                      {isUploading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <UploadCloud className="h-5 w-5" />
+                      )}
+                    </div>
+
+                    {isUploading ? (
+                      <div className="w-full max-w-xs space-y-1.5">
+                        <p className="text-xs font-bold text-slate-700 dark:text-gray-200">
+                          {language === "ar"
+                            ? `جارٍ الرفع إلى Cloudinary... ${uploadProgress}%`
+                            : `Uploading to Cloudinary... ${uploadProgress}%`}
+                        </p>
+                        <div className="w-full bg-slate-200 dark:bg-[#202020] rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="bg-[#8B3A2E] h-1.5 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs font-bold text-slate-800 dark:text-gray-200">
+                          {language === "ar"
+                            ? "اضغط لاختيار صورة من جهازك أو اسحبها هنا"
+                            : "Click to upload product image or drag and drop"}
+                        </p>
+                        <p className="text-[10px] text-slate-500 dark:text-gray-400">
+                          PNG, JPG, WebP, AVIF (Max 10MB) • Uploads to Cloudinary (negm-store/products)
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Upload Error Display */}
+                {uploadError && (
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                {/* Image Preview & URL Row */}
+                {formData.image && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#111111]">
+                    <div className="relative h-14 w-14 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-[#1A1A1A] border border-slate-200 dark:border-transparent">
+                      <Image
+                        src={formData.image}
+                        alt="Product preview"
+                        fill
+                        className="object-contain p-1"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {formData.image.includes("cloudinary.com") ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Cloudinary Hosted
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                            <Link2 className="h-3 w-3" />
+                            External URL
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate font-mono">
+                        {formData.image}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: "" })}
+                      className="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-500/10"
+                      title="Clear image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Manual Image URL Input fallback */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
+                    {language === "ar" ? "أو أدخل رابط الصورة يدوياً:" : "Or enter image URL manually:"}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.image}
+                    onChange={(e) => {
+                      setFormData({ ...formData, image: e.target.value });
+                      setUploadError(null);
+                    }}
+                    placeholder="https://res.cloudinary.com/..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#0E0E0E] text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017] text-xs font-mono"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -442,9 +647,11 @@ export default function AdminProductsPage() {
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-[#8B3A2E] text-white font-bold hover:bg-[#a34436] transition shadow-md"
+                  disabled={isUploading}
+                  className="px-6 py-2.5 rounded-xl bg-[#8B3A2E] text-white font-bold hover:bg-[#a34436] transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Save Product
+                  {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <span>{isUploading ? (language === "ar" ? "جارٍ الرفع..." : "Uploading...") : "Save Product"}</span>
                 </button>
               </div>
             </form>

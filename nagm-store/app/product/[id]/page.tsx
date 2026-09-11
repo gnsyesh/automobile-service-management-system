@@ -59,24 +59,26 @@ export default function ProductDetailPage() {
       setProduct(staticProd);
       setLoading(false);
       setNotFound(false);
-      return;
+    } else {
+      setLoading(true);
     }
 
     const fetchFirestoreProduct = async () => {
-      setLoading(true);
       try {
         const snap = await getDoc(doc(db, "products", productId));
         if (snap.exists()) {
           setProduct({ id: snap.id, ...(snap.data() as any) });
           setNotFound(false);
-        } else {
+        } else if (!staticProd) {
           setProduct(null);
           setNotFound(true);
         }
       } catch (err) {
         console.error("Error fetching Firestore product:", err);
-        setProduct(null);
-        setNotFound(true);
+        if (!staticProd) {
+          setProduct(null);
+          setNotFound(true);
+        }
       } finally {
         setLoading(false);
       }

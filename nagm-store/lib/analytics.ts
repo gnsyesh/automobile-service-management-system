@@ -5,6 +5,7 @@ import {
   DateRange,
   PeriodMetrics,
   ComparisonResult,
+  UserProfile,
 } from "@/types";
 
 /**
@@ -495,4 +496,123 @@ export function aggregateCategoryPerformance(
       unitsSold: data.unitsSold,
     }))
     .sort((a, b) => b.revenue - a.revenue);
+}
+
+/**
+ * Calculates total physical product units sold in qualifying orders.
+ */
+export function getPurchasedUnitsCount(orders: Order[]): number {
+  let count = 0;
+  orders.forEach((o) => {
+    if (!isQualifyingRevenueOrder(o)) return;
+    if (!Array.isArray(o.items)) return;
+    o.items.forEach((item) => {
+      count += item.quantity || 1;
+    });
+  });
+  return count;
+}
+
+export interface CustomerInsights {
+  totalRegistered: number;
+  newCustomersInPeriod: number;
+  activeBuyersInPeriod: number;
+  repeatCustomersCount: number;
+  repeatCustomerRate: number;
+  topCustomers: {
+    uid: string;
+    name: string;
+    email: string;
+    phone?: string;
+    ordersCount: number;
+    totalSpent: number;
+  }[];
+}
+
+/**
+ * Analyzes real customer activity and purchase behavior from Firestore users and orders.
+ */
+export function getCustomerInsights(
+  customers: UserProfile[],
+  ordersInPeriod: Order[],
+  range?: DateRange
+): CustomerInsights {
+  const totalRegistered = customers.length;
+
+  // 1. New customers registered in selected period
+  let newCustomersInPeriod = 0;
+  if (range && range.startDate && range.endDate) {
+    customers.forEach((c) => {
+      const d = normalizeDate(c.createdAt);
+      if (d && d >= range.startDate! && d <= range.endDate!) {
+        newCustomersInPeriod += 1;
+      }
+    });
+  }
+
+  // 2. Active buyers and repeat rate from orders in period
+  const customerOrdersMap = new Map<
+    string,
+    { ordersCount: number; totalSpent: number; userEmail?: string; customerName?: string }
+  >();
+
+  ordersInPeriod.forEach((o) => {
+    if (!isQualifyingRevenueOrder(o)) return;
+    const key = o.userId || o.userEmail || "anonymous";
+    const existing = customerOrdersMap.get(key) || {
+      ordersCount: 0,
+      totalSpent: 0,
+      userEmail: o.userEmail,
+      customerName: o.shippingAddress?.fullName,
+    };
+    existing.ordersCount += 1;
+    existing.totalSpent += o.total || 0;
+    if (o.shippingAddress?.fullName) existing.customerName = o.shippingAddress.fullName;
+    customerOrdersMap.set(key, existing);
+  });
+
+  const activeBuyersInPeriod = customerOrdersMap.size;
+  let repeatCustomersCount = 0;
+  customerOrdersMap.forEach((data) => {
+    if (data.ordersCount > 1) {
+      repeatCustomersCount += 1;
+    }
+  });
+
+  const repeatCustomerRate =
+    activeBuyersInPeriod > 0
+      ? Math.round((repeatCustomersCount / activeBuyersInPeriod) * 100)
+      : 0;
+
+  // 3. Top customers ranked by total spend
+  // Create quick lookup map for customer profiles
+  const profileMap = new Map<string, UserProfile>();
+  customers.forEach((c) => {
+    if (c.uid) profileMap.set(c.uid, c);
+    if (c.email) profileMap.set(c.email.toLowerCase(), c);
+  });
+
+  const topCustomers = Array.from(customerOrdersMap.entries())
+    .map(([key, data]) => {
+      const profile = profileMap.get(key) || (data.userEmail ? profileMap.get(data.userEmail.toLowerCase()) : undefined);
+      return {
+        uid: profile?.uid || key,
+        name: profile?.name || data.customerName || profile?.email?.split("@")[0] || "Customer",
+        email: profile?.email || data.userEmail || "",
+        phone: profile?.phone || "",
+        ordersCount: data.ordersCount,
+        totalSpent: data.totalSpent,
+      };
+    })
+    .sort((a, b) => b.totalSpent - a.totalSpent)
+    .slice(0, 5);
+
+  return {
+    totalRegistered,
+    newCustomersInPeriod,
+    activeBuyersInPeriod,
+    repeatCustomersCount,
+    repeatCustomerRate,
+    topCustomers,
+  };
 }
