@@ -1,6 +1,11 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 
+// Strict server-only environment check to prevent client-side bundle leakage
+if (typeof window !== "undefined") {
+  throw new Error("Firebase Admin SDK can only be executed in a server environment.");
+}
+
 const adminApp =
   getApps().length > 0
     ? getApps()[0]

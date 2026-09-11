@@ -72,7 +72,12 @@ export default function AdminOrdersPage() {
       );
     } catch (e) {
       console.error("Error updating order status:", e);
-      showToast("Failed to update status in database.", "error");
+      showToast(
+        language === "ar"
+          ? "تعذر تحديث حالة الطلب. يرجى التحقق من اتصالك بالإنترنت والمحاولة مجدداً."
+          : "Unable to update order status. Please check your network and try again.",
+        "error"
+      );
     }
   };
 

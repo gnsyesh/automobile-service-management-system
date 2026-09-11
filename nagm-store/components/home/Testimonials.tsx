@@ -89,7 +89,7 @@ export default function Testimonials() {
                 </div>
 
                 <p className="text-sm text-slate-700 dark:text-gray-300 italic leading-relaxed">
-                  "{tItem.comment}"
+                  &ldquo;{tItem.comment}&rdquo;
                 </p>
               </div>
 

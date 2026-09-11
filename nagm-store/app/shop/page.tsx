@@ -10,12 +10,14 @@ import { categories } from "@/data/categories";
 import { brands } from "@/data/brands";
 import { useLanguage } from "@/context/LanguageContext";
 import { useVehicle } from "@/context/VehicleContext";
+import { useAuth } from "@/context/AuthContext";
 import { TranslationKey } from "@/locales/en";
 import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "lucide-react";
 
 function ShopContent() {
   const searchParams = useSearchParams();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
 
   // Filter States
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -146,6 +148,15 @@ function ShopContent() {
     setSortOption("popular");
     setCurrentPage(1);
   };
+
+  // Reset active filter state if the authenticated user switches or logs out
+  const prevUidRef = React.useRef<string | undefined>(user?.uid);
+  useEffect(() => {
+    if (prevUidRef.current !== user?.uid) {
+      prevUidRef.current = user?.uid;
+      handleResetFilters();
+    }
+  }, [user?.uid]);
 
   const currentCatKey = `cat.${categoryFilter}` as TranslationKey;
   const currentCatTitle = categoryFilter !== "all" ? (t(currentCatKey) !== currentCatKey ? t(currentCatKey) : categoryFilter) : t("shop.title");

@@ -48,6 +48,10 @@ export default function AdminLoginPage() {
       );
 
       const user = userCredential.user;
+      await user.reload();
+
+      // Ensure fresh ID token is synchronized with Firestore transport
+      await user.getIdToken(true);
 
       // 2. Check email verification
       if (!user.emailVerified) {
@@ -66,17 +70,36 @@ export default function AdminLoginPage() {
       let adminSnap;
       try {
         adminSnap = await getDoc(doc(db, "admins", user.uid));
-      } catch (dbErr: any) {
-        console.error("Error checking admin credentials:", dbErr);
-        await auth.signOut();
-        showToast(
-          language === "ar"
-            ? "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى."
-            : "Unable to connect to the server. Please check your internet connection and try again.",
-          "error"
-        );
-        setLoading(false);
-        return;
+      } catch (firstErr: any) {
+        if (firstErr?.code === "permission-denied") {
+          console.warn("[AdminLogin] Permission-denied on initial check. Retrying with refreshed token...");
+          await user.getIdToken(true);
+          try {
+            adminSnap = await getDoc(doc(db, "admins", user.uid));
+          } catch (retryErr) {
+            console.error("Error checking admin credentials after retry:", retryErr);
+            await auth.signOut();
+            showToast(
+              language === "ar"
+                ? "تعذر التحقق من صلاحيات المشرف. يرجى المحاولة مرة أخرى."
+                : "Unable to verify administrator permissions. Please try again.",
+              "error"
+            );
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.error("Error checking admin credentials:", firstErr);
+          await auth.signOut();
+          showToast(
+            language === "ar"
+              ? "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى."
+              : "Unable to connect to the server. Please check your internet connection and try again.",
+            "error"
+          );
+          setLoading(false);
+          return;
+        }
       }
 
       const adminData = adminSnap.data();

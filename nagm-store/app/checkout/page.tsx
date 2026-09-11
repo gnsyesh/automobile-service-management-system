@@ -173,8 +173,10 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 4. Create Order Object
-      const orderId = `NS-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      // 4. Create Collision-Resistant Order Object
+      const timeComponent = Date.now().toString(36).toUpperCase();
+      const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const orderId = `NS-${new Date().getFullYear()}-${timeComponent}-${randomSuffix}`;
       const orderDateStr = new Date().toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
         year: "numeric",
         month: "long",
@@ -239,12 +241,15 @@ export default function CheckoutPage() {
         console.warn("Could not update user shipping address:", upErr);
       }
 
-      // 7. Save Order to LocalStorage for offline and instant profile view
-      localStorage.setItem("negm_latest_order", JSON.stringify(newOrder));
+      // 7. Save Order to LocalStorage partitioned strictly by user UID
+      localStorage.setItem(`negm_latest_order_${currentUser.uid}`, JSON.stringify(newOrder));
       try {
-        const history: Order[] = JSON.parse(localStorage.getItem("negm_orders_history") || "[]");
+        const historyKey = `negm_orders_history_${currentUser.uid}`;
+        const history: Order[] = JSON.parse(localStorage.getItem(historyKey) || "[]");
         const filteredHistory = history.filter((o) => o && o.userId === currentUser.uid);
-        localStorage.setItem("negm_orders_history", JSON.stringify([newOrder, ...filteredHistory]));
+        localStorage.setItem(historyKey, JSON.stringify([newOrder, ...filteredHistory]));
+        if (localStorage.getItem("negm_latest_order")) localStorage.removeItem("negm_latest_order");
+        if (localStorage.getItem("negm_orders_history")) localStorage.removeItem("negm_orders_history");
       } catch (lsErr) {
         console.error("Local history error:", lsErr);
       }

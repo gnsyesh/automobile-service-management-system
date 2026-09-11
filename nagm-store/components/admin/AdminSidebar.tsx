@@ -55,14 +55,14 @@ export default function AdminSidebar() {
       exact: true,
     },
     {
-      name: t("admin.products"),
-      href: "/admin/products",
-      icon: Package,
-    },
-    {
       name: t("admin.orders"),
       href: "/admin/orders",
       icon: ShoppingCart,
+    },
+    {
+      name: t("admin.products"),
+      href: "/admin/products",
+      icon: Package,
     },
     {
       name: t("admin.customers"),

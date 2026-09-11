@@ -152,6 +152,45 @@ export interface OrderCustomerDetails {
   phone: string;
 }
 
+export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+
+export type DateFilterPreset =
+  | "today"
+  | "yesterday"
+  | "this_week"
+  | "last_week"
+  | "this_month"
+  | "last_month"
+  | "this_year"
+  | "last_year"
+  | "specific_month"
+  | "specific_year"
+  | "custom"
+  | "all_time";
+
+export interface DateRange {
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+export interface PeriodMetrics {
+  revenue: number;
+  ordersCount: number;
+  averageOrderValue: number;
+  totalCustomers: number;
+}
+
+export interface ComparisonResult {
+  period1: PeriodMetrics;
+  period2: PeriodMetrics;
+  revenueDiff: number;
+  revenuePct: number;
+  ordersDiff: number;
+  ordersPct: number;
+  aovDiff: number;
+  aovPct: number;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -166,8 +205,8 @@ export interface Order {
   total: number;
   shippingAddress: Address;
   paymentMethod: 'cod' | 'card' | 'wallet';
-  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  orderStatus?: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: OrderStatus;
+  orderStatus?: OrderStatus;
   estimatedDelivery?: string;
   trackingNumber?: string;
   createdAt?: string;

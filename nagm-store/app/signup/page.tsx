@@ -163,8 +163,8 @@ export default function SignupPage() {
     setGoogleLoading(true);
 
     try {
-      const cred = await signInWithGoogle();
-      if (cred && cred.user) {
+      const user = await signInWithGoogle();
+      if (user) {
         showToast(
           language === "ar" ? "تم تسجيل الحساب بنجاح عبر جوجل!" : "Signed in with Google successfully!",
           "success"

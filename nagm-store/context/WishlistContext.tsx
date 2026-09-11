@@ -1,8 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { Product } from "@/types";
 import { useToast } from "./ToastContext";
+import { useAuth } from "./AuthContext";
 
 interface WishlistContextType {
   wishlist: Product[];
@@ -17,25 +18,53 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
+  const activeUid = user ? user.uid : "guest";
+
   const [wishlist, setWishlist] = useState<Product[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isLoadedForUidRef = useRef<string | null>(null);
   const { showToast } = useToast();
 
+  // Synchronize wishlist with current authenticated user (or guest)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("negm_wishlist");
-      if (saved) setWishlist(JSON.parse(saved));
-    } catch (e) {
-      console.error("Failed to load wishlist", e);
-    }
-    setIsInitialized(true);
-  }, []);
+    if (authLoading) return;
 
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("negm_wishlist", JSON.stringify(wishlist));
+    const wishlistKey = `negm_wishlist_${activeUid}`;
+
+    try {
+      // One-time legacy cleanup/migration for guest only
+      if (activeUid === "guest" && !localStorage.getItem(wishlistKey) && localStorage.getItem("negm_wishlist")) {
+        const legacyWishlist = localStorage.getItem("negm_wishlist");
+        if (legacyWishlist) localStorage.setItem(wishlistKey, legacyWishlist);
+      }
+      if (localStorage.getItem("negm_wishlist")) {
+        localStorage.removeItem("negm_wishlist");
+      }
+
+      const saved = localStorage.getItem(wishlistKey);
+      setWishlist(saved ? JSON.parse(saved) : []);
+    } catch (e) {
+      console.error("Failed to load wishlist from localStorage for", activeUid, e);
+      setWishlist([]);
     }
-  }, [wishlist, isInitialized]);
+
+    isLoadedForUidRef.current = activeUid;
+  }, [activeUid, authLoading]);
+
+  // Persist wishlist strictly for the loaded UID
+  useEffect(() => {
+    if (authLoading || isLoadedForUidRef.current !== activeUid) {
+      return;
+    }
+
+    const wishlistKey = `negm_wishlist_${activeUid}`;
+
+    try {
+      localStorage.setItem(wishlistKey, JSON.stringify(wishlist));
+    } catch (e) {
+      console.error("Failed to save wishlist to localStorage for", activeUid, e);
+    }
+  }, [wishlist, activeUid, authLoading]);
 
   const isInWishlist = (productId: string) => {
     return wishlist.some((item) => item.id === productId);
@@ -63,6 +92,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const clearWishlist = () => {
     setWishlist([]);
+    try {
+      localStorage.removeItem(`negm_wishlist_${activeUid}`);
+    } catch (e) {
+      console.error("Failed to clear wishlist in localStorage", e);
+    }
   };
 
   return (

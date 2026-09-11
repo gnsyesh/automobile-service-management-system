@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
 import ProductCard from "@/components/common/ProductCard";
-import { products } from "@/data/products";
+import { products as staticProducts } from "@/data/products";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useVehicle } from "@/context/VehicleContext";
 import { useToast } from "@/context/ToastContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Star,
   ShoppingBag,
@@ -28,30 +32,114 @@ import {
   Check,
   ChevronRight,
   Car,
-  PackageCheck
+  PackageCheck,
+  RefreshCw,
 } from "lucide-react";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params?.id as string;
+  const { language } = useLanguage();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { selectedVehicle, isCompatible, setIsVehicleModalOpen } = useVehicle();
   const { showToast } = useToast();
 
-  const product = products.find((p) => p.id === productId) || products[0];
+  const [product, setProduct] = useState<Product | null>(() => {
+    return staticProducts.find((p) => p.id === productId) || null;
+  });
+  const [loading, setLoading] = useState<boolean>(!product);
+  const [notFound, setNotFound] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!productId) return;
+    const staticProd = staticProducts.find((p) => p.id === productId);
+    if (staticProd) {
+      setProduct(staticProd);
+      setLoading(false);
+      setNotFound(false);
+      return;
+    }
+
+    const fetchFirestoreProduct = async () => {
+      setLoading(true);
+      try {
+        const snap = await getDoc(doc(db, "products", productId));
+        if (snap.exists()) {
+          setProduct({ id: snap.id, ...(snap.data() as any) });
+          setNotFound(false);
+        } else {
+          setProduct(null);
+          setNotFound(true);
+        }
+      } catch (err) {
+        console.error("Error fetching Firestore product:", err);
+        setProduct(null);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFirestoreProduct();
+  }, [productId]);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"specs" | "compatibility" | "description" | "reviews">("specs");
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
+        <Navbar />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw className="h-8 w-8 animate-spin text-[#D4A017]" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {language === "ar" ? "جاري تحميل تفاصيل المنتج..." : "Loading product details..."}
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  if (notFound || !product) {
+    return (
+      <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
+        <Navbar />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col items-center justify-center text-center py-16">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4 text-red-600 dark:text-red-400">
+            <AlertTriangle className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            {language === "ar" ? "المنتج غير موجود" : "Product Not Found"}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6 text-sm">
+            {language === "ar"
+              ? "عذراً، المنتج الذي تبحث عنه غير متوفر أو ربما تم حذفه من كتالوج المتجر."
+              : "Sorry, the part you are looking for is not available or has been removed from the catalog."}
+          </p>
+          <Link
+            href="/shop"
+            className="px-6 py-2.5 bg-[#D4A017] hover:bg-[#b88a14] text-slate-950 font-bold rounded-lg transition-colors text-sm shadow-sm"
+          >
+            {language === "ar" ? "العودة إلى المتجر" : "Return to Shop"}
+          </Link>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   const isLiked = isInWishlist(product.id);
   const fitsActiveVehicle = selectedVehicle ? isCompatible(product) : null;
 
   // Bundle Items for Frequently Bought Together
   const bundleItems = (product.frequentlyBoughtTogetherIds || [])
-    .map((id) => products.find((p) => p.id === id))
+    .map((id) => staticProducts.find((p) => p.id === id))
     .filter(Boolean);
 
   const bundleTotalPrice = product.price + bundleItems.reduce((sum, item) => sum + (item?.price || 0), 0);
@@ -81,7 +169,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  const relatedProducts = products
+  const relatedProducts = staticProducts
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 

@@ -16,71 +16,88 @@ service cloud.firestore {
         && request.auth.uid == userId;
     }
 
+    // Administrator authorization via admins/{uid} document
     function isAdmin() {
       return isAuthenticated()
-        && request.auth.token.admin == true;
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('role', '') == "admin"
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get('active', false) == true;
     }
 
 
     // =========================================================
-    // ADMINS
+    // ADMINS COLLECTION
     // =========================================================
 
     match /admins/{adminId} {
 
-      // Admin can read their own admin document.
-      // Other admins can read admin documents.
+      // User can read their own admin document for authorization check;
+      // Active admins can read admin documents.
       allow read: if isOwner(adminId) || isAdmin();
 
-      // Only admins can create/update/delete admin documents.
+      // Only verified active administrators can create, update, or delete admin documents.
+      // Normal customers cannot create or activate admin records.
       allow create, update, delete: if isAdmin();
     }
 
 
     // =========================================================
-    // USERS
+    // USERS COLLECTION
     // =========================================================
 
     match /users/{userId} {
 
       // A customer can read their own profile.
-      // Admins can read all customer profiles.
+      // Admins can read customer profiles for the Customers management page.
       allow read: if isOwner(userId) || isAdmin();
 
-      // Users can create only their own profile.
-      allow create: if isOwner(userId);
+      // Users can create only their own profile strictly with role: "user".
+      // Admins can create profile with role: "admin" or "user".
+      allow create: if isOwner(userId)
+        && (
+          !('role' in request.resource.data)
+          || request.resource.data.role == "user"
+          || isAdmin()
+        );
 
-      // Users can update their own profile.
+      // Users can update their own profile fields, but CANNOT escalate their role to "admin".
       // Admins can update any profile.
-      allow update: if isOwner(userId) || isAdmin();
+      allow update: if (
+        isOwner(userId)
+        && (
+          !('role' in request.resource.data)
+          || request.resource.data.role == resource.data.get('role', 'user')
+          || isAdmin()
+        )
+      ) || isAdmin();
 
-      // Only admins can delete users.
+      // Only admins can delete user records.
       allow delete: if isAdmin();
     }
 
 
     // =========================================================
-    // PRODUCTS
+    // PRODUCTS COLLECTION
     // =========================================================
 
     match /products/{productId} {
 
-      // Public product catalogue.
+      // Public product catalogue readable by everyone.
       allow read: if true;
 
-      // Only admins can modify products.
+      // Only admins can create, update, or delete products.
       allow create, update, delete: if isAdmin();
     }
 
 
     // =========================================================
-    // ORDERS
+    // ORDERS COLLECTION
     // =========================================================
 
     match /orders/{orderId} {
 
       // Customers can read their own orders.
-      // Admins can read all orders.
+      // Admins can read all orders for fulfillment and analytics.
       allow read: if isAdmin()
         || (
           isAuthenticated()
@@ -91,7 +108,7 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && request.resource.data.userId == request.auth.uid;
 
-      // Only admins can modify or delete orders.
+      // Only admins can update order status or delete orders.
       allow update, delete: if isAdmin();
     }
 

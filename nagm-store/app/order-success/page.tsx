@@ -23,16 +23,22 @@ export default function OrderSuccessPage() {
       router.replace("/login");
       return;
     }
+    if (!user) return;
+
     try {
-      const saved = localStorage.getItem("negm_latest_order");
+      const orderKey = `negm_latest_order_${user.uid}`;
+      const saved = localStorage.getItem(orderKey);
       if (saved) {
         const parsedOrder: Order = JSON.parse(saved);
-        if (user && parsedOrder.userId === user.uid) {
+        if (parsedOrder.userId === user.uid) {
           setOrder(parsedOrder);
+          return;
         }
       }
+      setOrder(null);
     } catch (e) {
       console.error(e);
+      setOrder(null);
     }
   }, [authLoading, user, router]);
 

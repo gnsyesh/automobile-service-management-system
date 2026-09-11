@@ -1,9 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { CartItem, Product, Coupon } from "@/types";
 import { coupons } from "@/data/coupons";
 import { useToast } from "./ToastContext";
+import { useAuth } from "./AuthContext";
 
 interface CartContextType {
   cart: CartItem[];
@@ -25,33 +26,68 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading: authLoading } = useAuth();
+  const activeUid = user ? user.uid : "guest";
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [coupon, setCoupon] = useState<Coupon | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const isLoadedForUidRef = useRef<string | null>(null);
   const { showToast } = useToast();
 
+  // Synchronize cart with current authenticated user (or guest)
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem("negm_cart");
-      const savedCoupon = localStorage.getItem("negm_coupon");
-      if (savedCart) setCart(JSON.parse(savedCart));
-      if (savedCoupon) setCoupon(JSON.parse(savedCoupon));
-    } catch (e) {
-      console.error("Failed to load cart from localStorage", e);
-    }
-    setIsInitialized(true);
-  }, []);
+    if (authLoading) return;
 
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("negm_cart", JSON.stringify(cart));
-      if (coupon) {
-        localStorage.setItem("negm_coupon", JSON.stringify(coupon));
-      } else {
+    const cartKey = `negm_cart_${activeUid}`;
+    const couponKey = `negm_coupon_${activeUid}`;
+
+    try {
+      // One-time legacy cleanup/migration for guest only
+      if (activeUid === "guest" && !localStorage.getItem(cartKey) && localStorage.getItem("negm_cart")) {
+        const legacyCart = localStorage.getItem("negm_cart");
+        if (legacyCart) localStorage.setItem(cartKey, legacyCart);
+      }
+      if (localStorage.getItem("negm_cart")) {
+        localStorage.removeItem("negm_cart");
+      }
+      if (localStorage.getItem("negm_coupon")) {
         localStorage.removeItem("negm_coupon");
       }
+
+      const savedCart = localStorage.getItem(cartKey);
+      const savedCoupon = localStorage.getItem(couponKey);
+
+      setCart(savedCart ? JSON.parse(savedCart) : []);
+      setCoupon(savedCoupon ? JSON.parse(savedCoupon) : null);
+    } catch (e) {
+      console.error("Failed to load cart from localStorage for", activeUid, e);
+      setCart([]);
+      setCoupon(null);
     }
-  }, [cart, coupon, isInitialized]);
+
+    isLoadedForUidRef.current = activeUid;
+  }, [activeUid, authLoading]);
+
+  // Persist cart strictly for the loaded UID
+  useEffect(() => {
+    if (authLoading || isLoadedForUidRef.current !== activeUid) {
+      return;
+    }
+
+    const cartKey = `negm_cart_${activeUid}`;
+    const couponKey = `negm_coupon_${activeUid}`;
+
+    try {
+      localStorage.setItem(cartKey, JSON.stringify(cart));
+      if (coupon) {
+        localStorage.setItem(couponKey, JSON.stringify(coupon));
+      } else {
+        localStorage.removeItem(couponKey);
+      }
+    } catch (e) {
+      console.error("Failed to save cart to localStorage for", activeUid, e);
+    }
+  }, [cart, coupon, activeUid, authLoading]);
 
   const addToCart = (product: Product, quantity = 1) => {
     setCart((prevCart) => {
@@ -95,6 +131,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = () => {
     setCart([]);
     setCoupon(null);
+    try {
+      localStorage.removeItem(`negm_cart_${activeUid}`);
+      localStorage.removeItem(`negm_coupon_${activeUid}`);
+    } catch (e) {
+      console.error("Failed to clear cart in localStorage", e);
+    }
   };
 
   const applyCoupon = (code: string) => {

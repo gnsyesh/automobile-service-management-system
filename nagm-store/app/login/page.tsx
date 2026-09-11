@@ -49,6 +49,7 @@ export default function LoginPage() {
       );
 
       const user = userCredential.user;
+      await user.reload();
 
       // Check email verification (Google users are not blocked)
       const isGoogle = user.providerData.some((p) => p.providerId === "google.com");
@@ -129,9 +130,9 @@ export default function LoginPage() {
     setGoogleLoading(true);
 
     try {
-      const cred = await signInWithGoogle();
-      // If popup succeeded and returned credentials
-      if (cred && cred.user) {
+      const user = await signInWithGoogle();
+      // If popup succeeded and returned user
+      if (user) {
         showToast(
           language === "ar" ? "تم تسجيل الدخول بنجاح عبر جوجل!" : "Signed in with Google successfully!",
           "success"

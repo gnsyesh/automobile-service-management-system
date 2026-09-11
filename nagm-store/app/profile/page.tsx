@@ -110,20 +110,42 @@ export default function ProfilePage() {
           apartment: userProfile.shippingAddress.apartment || "",
         });
       } else {
-        setAddressForm((prev) => ({
-          ...prev,
+        setAddressForm({
           fullName: userProfile.name || user?.displayName || "",
           phone: userProfile.phone || "",
-        }));
+          governorate: "Cairo",
+          city: "",
+          street: "",
+          building: "",
+          apartment: "",
+        });
       }
+    } else {
+      setEditName("");
+      setEditPhone("");
+      setAddressForm({
+        fullName: "",
+        phone: "",
+        governorate: "Cairo",
+        city: "",
+        street: "",
+        building: "",
+        apartment: "",
+      });
     }
   }, [userProfile, user]);
 
   // Fetch real user orders from Firestore
   useEffect(() => {
+    if (!user) {
+      setOrders([]);
+      setOrdersLoading(false);
+      return;
+    }
+
     const fetchUserOrders = async () => {
-      if (!user) return;
       setOrdersLoading(true);
+      const historyKey = `negm_orders_history_${user.uid}`;
       try {
         const q = query(collection(db, "orders"), where("userId", "==", user.uid));
         const snap = await getDocs(q);
@@ -137,17 +159,21 @@ export default function ProfilePage() {
 
         if (list.length > 0) {
           setOrders(list);
+          try {
+            localStorage.setItem(historyKey, JSON.stringify(list));
+            if (localStorage.getItem("negm_orders_history")) localStorage.removeItem("negm_orders_history");
+          } catch {}
         } else {
           // Fallback to locally cached history strictly for current user
-          const localOrders = JSON.parse(localStorage.getItem("negm_orders_history") || "[]");
+          const localOrders = JSON.parse(localStorage.getItem(historyKey) || "[]");
           const userLocalOrders = localOrders.filter((o: Order) => o && o.userId === user.uid);
           setOrders(userLocalOrders);
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
-        // Fallback to local session storage strictly for current user
+        // Fallback to local storage strictly for current user
         try {
-          const localOrders = JSON.parse(localStorage.getItem("negm_orders_history") || "[]");
+          const localOrders = JSON.parse(localStorage.getItem(historyKey) || "[]");
           const userLocalOrders = localOrders.filter((o: Order) => o && o.userId === user.uid);
           setOrders(userLocalOrders);
         } catch {
@@ -158,9 +184,7 @@ export default function ProfilePage() {
       }
     };
 
-    if (user) {
-      fetchUserOrders();
-    }
+    fetchUserOrders();
   }, [user]);
 
   const handleSaveAddress = async (e: React.FormEvent) => {
@@ -244,7 +268,7 @@ export default function ProfilePage() {
   const displayName = userProfile?.name || user.displayName || user.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();

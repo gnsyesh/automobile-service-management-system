@@ -1,6 +1,9 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
+
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, getFirestore, Firestore } from "firebase/firestore";
+
+import { getFirestore } from "firebase/firestore";
+
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -13,21 +16,13 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const app = getApps().length
+  ? getApp()
+  : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-let firestoreDb: Firestore;
-try {
-  firestoreDb = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
-    ignoreUndefinedProperties: true,
-  });
-} catch {
-  firestoreDb = getFirestore(app);
-}
-
-export const db = firestoreDb;
+export const db = getFirestore(app);
 
 if (typeof window !== "undefined") {
   isSupported().then((supported) => {
