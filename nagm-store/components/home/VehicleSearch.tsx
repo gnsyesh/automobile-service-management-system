@@ -6,9 +6,11 @@ import { motion } from "framer-motion";
 import { Car, Search } from "lucide-react";
 import { vehicleMakes } from "@/data/vehicles";
 import { useVehicle } from "@/context/VehicleContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function VehicleSearch() {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const { setSelectedVehicle } = useVehicle();
 
   const [make, setMake] = useState("");
@@ -32,7 +34,7 @@ export default function VehicleSearch() {
   };
 
   return (
-    <section className="relative z-20 -mt-10 mx-auto max-w-6xl px-4 w-full min-w-0">
+    <section className="relative z-20 -mt-10 mx-auto max-w-6xl px-4 w-full min-w-0 text-left rtl:text-right">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -41,12 +43,16 @@ export default function VehicleSearch() {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-[#2D2D2D]">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8B3A2E] text-white shadow-lg">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#8B3A2E] text-white shadow-lg shrink-0">
               <Car className="h-6 w-6 text-[#D4A017]" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">Find Exact Fit Spare Parts</h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400">Select your car specifications to filter compatible products</p>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                {t("vehicle.exactFit")}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400">
+                {t("vehicle.exactFitDesc")}
+              </p>
             </div>
           </div>
         </div>
@@ -55,7 +61,7 @@ export default function VehicleSearch() {
           {/* Make Dropdown */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-[#D4A017] mb-2">
-              1. Car Make
+              {language === "ar" ? "1. ماركة السيارة" : "1. Car Make"}
             </label>
             <select
               value={make}
@@ -64,9 +70,9 @@ export default function VehicleSearch() {
                 setModel("");
                 setYear("");
               }}
-              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
             >
-              <option value="">-- Choose Make --</option>
+              <option value="">{language === "ar" ? "-- اختر ماركة --" : "-- Choose Make --"}</option>
               {vehicleMakes.map((m) => (
                 <option key={m.name} value={m.name}>
                   {m.name}
@@ -78,7 +84,7 @@ export default function VehicleSearch() {
           {/* Model Dropdown */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-[#D4A017] mb-2">
-              2. Model
+              {language === "ar" ? "2. الموديل" : "2. Model"}
             </label>
             <select
               value={model}
@@ -87,9 +93,9 @@ export default function VehicleSearch() {
                 setModel(e.target.value);
                 setYear("");
               }}
-              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
             >
-              <option value="">-- Choose Model --</option>
+              <option value="">{language === "ar" ? "-- اختر الموديل --" : "-- Choose Model --"}</option>
               {currentMakeObj?.models.map((m) => (
                 <option key={m.name} value={m.name}>
                   {m.name}
@@ -101,15 +107,15 @@ export default function VehicleSearch() {
           {/* Year Dropdown */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-[#D4A017] mb-2">
-              3. Year
+              {language === "ar" ? "3. سنة الصنع" : "3. Year"}
             </label>
             <select
               value={year}
               disabled={!model}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none disabled:opacity-40"
             >
-              <option value="">-- Choose Year --</option>
+              <option value="">{language === "ar" ? "-- اختر سنة الصنع --" : "-- Choose Year --"}</option>
               {currentModelObj?.years.map((y) => (
                 <option key={y} value={y}>
                   {y}
@@ -126,7 +132,7 @@ export default function VehicleSearch() {
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#8B3A2E] py-3.5 px-6 font-bold text-sm text-white hover:bg-[#a34436] transition shadow-lg disabled:opacity-50"
             >
               <Search className="h-4 w-4" />
-              <span>Search Parts</span>
+              <span>{language === "ar" ? "البحث عن القطع" : "Search Parts"}</span>
             </button>
           </div>
         </form>

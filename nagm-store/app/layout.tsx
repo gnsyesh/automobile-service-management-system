@@ -8,6 +8,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import { VehicleProvider } from "@/context/VehicleContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CartProvider } from "@/context/CartContext";
+import VehicleSelectorModal from "@/components/common/VehicleSelectorModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
                   <WishlistProvider>
                     <CartProvider>
                       {children}
+                      <VehicleSelectorModal />
                     </CartProvider>
                   </WishlistProvider>
                 </VehicleProvider>

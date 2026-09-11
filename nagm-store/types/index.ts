@@ -120,18 +120,56 @@ export interface Address {
   isDefault?: boolean;
 }
 
+export type UserRole = "user" | "admin";
+
+export interface AdminRecord {
+  uid: string;
+  email: string;
+  name: string;
+  role: "admin";
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UserProfile {
+  uid: string;
+  name: string;
+  email: string;
+  phone?: string;
+  photoURL?: string;
+  savedAddress?: Address;
+  shippingAddress?: Address;
+  role?: UserRole;
+  provider?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface OrderCustomerDetails {
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
 export interface Order {
   id: string;
-  orderDate: string;
+  userId: string;
+  userEmail?: string;
+  customerDetails?: OrderCustomerDetails;
+  orderDate?: string;
   items: CartItem[];
   subtotal: number;
   shipping: number;
   vat: number;
-  discount: number;
+  discount?: number;
   total: number;
   shippingAddress: Address;
   paymentMethod: 'cod' | 'card' | 'wallet';
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  estimatedDelivery: string;
-  trackingNumber: string;
+  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  orderStatus?: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  estimatedDelivery?: string;
+  trackingNumber?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

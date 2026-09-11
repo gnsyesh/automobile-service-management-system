@@ -5,7 +5,16 @@ import { Phone, Mail, MapPin, Headphones } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Contact() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(
+      language === "ar"
+        ? "شكراً لتواصلك مع نجم ستور! تم استلام رسالتك وسيتواصل معك أحد ممثلي خدمة العملاء قريباً."
+        : "Thank you for contacting Negm Store! Your message has been received and our team will get back to you shortly."
+    );
+  };
 
   return (
     <section className="py-20 bg-slate-100 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300 overflow-hidden w-full max-w-full">
@@ -60,13 +69,14 @@ export default function Contact() {
           <div className="lg:col-span-6">
             <div className="rounded-3xl border border-slate-200 dark:border-[#D4A017]/30 bg-white dark:bg-[#1B1B1B] p-8 shadow-xl text-left rtl:text-right">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t("contact.formTitle")}</h3>
-              <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+              <form onSubmit={handleContactSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("contact.fullName")}</label>
                   <input
                     type="text"
-                    placeholder="e.g. Ahmed Mahmoud"
-                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
+                    required
+                    placeholder={language === "ar" ? "الاسم ثلاثي" : "Your full name"}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
                   />
                 </div>
                 <div>

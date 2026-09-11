@@ -9,12 +9,13 @@ import { products } from "@/data/products";
 import { categories } from "@/data/categories";
 import { brands } from "@/data/brands";
 import { useLanguage } from "@/context/LanguageContext";
+import { useVehicle } from "@/context/VehicleContext";
 import { TranslationKey } from "@/locales/en";
-import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw } from "lucide-react";
+import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "lucide-react";
 
 function ShopContent() {
   const searchParams = useSearchParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Filter States
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -47,9 +48,18 @@ function ShopContent() {
     setCurrentPage(1);
   }, [searchParams]);
 
+  // Vehicle Compatibility Filter
+  const { selectedVehicle, isCompatible, clearVehicle, setIsVehicleModalOpen } = useVehicle();
+  const [exactFitOnly, setExactFitOnly] = useState<boolean>(true);
+
   // Filter Logic
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      // Vehicle Exact-Fit Filter
+      if (selectedVehicle && exactFitOnly) {
+        if (!isCompatible(p)) return false;
+      }
+
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -91,7 +101,7 @@ function ShopContent() {
 
       return true;
     });
-  }, [searchQuery, categoryFilter, selectedBrands, maxPrice, inStockOnly, minRating]);
+  }, [searchQuery, categoryFilter, selectedBrands, maxPrice, inStockOnly, minRating, selectedVehicle, exactFitOnly, isCompatible]);
 
   // Sorting Logic
   const sortedProducts = useMemo(() => {
@@ -226,6 +236,51 @@ function ShopContent() {
             </div>
           </div>
         </div>
+
+        {/* Active Vehicle Filter Banner */}
+        {selectedVehicle && (
+          <div className="mb-8 rounded-2xl border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/20 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-left rtl:text-right">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+                <Car className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                    {t("vehicle.showingFor")}
+                  </span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">
+                    {selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model} ({selectedVehicle.engine})
+                  </span>
+                </div>
+                <label className="flex items-center gap-2 mt-1.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={exactFitOnly}
+                    onChange={(e) => setExactFitOnly(e.target.checked)}
+                    className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>{t("vehicle.fitsMyCar")}</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <button
+                onClick={() => setIsVehicleModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl border border-emerald-500/40 bg-white dark:bg-[#1B1B1B] text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#252525] transition shadow-sm"
+              >
+                {t("vehicle.changeVehicle")}
+              </button>
+              <button
+                onClick={clearVehicle}
+                className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#333] bg-white dark:bg-[#1B1B1B] text-xs font-semibold text-slate-600 dark:text-gray-400 hover:text-red-500 transition shadow-sm"
+              >
+                {t("vehicle.clearFilter")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -395,6 +450,32 @@ function ShopContent() {
                   </div>
                 )}
               </>
+            ) : selectedVehicle && exactFitOnly ? (
+              <div className="rounded-3xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] p-12 text-center shadow-sm">
+                <Car className="mx-auto h-12 w-12 text-[#D4A017] mb-4 opacity-80" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {t("vehicle.noCompatibleFound")}
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 mt-2 max-w-md mx-auto">
+                  {language === "ar"
+                    ? "جرب إيقاف تصفية التوافق لعرض كافة المنتجات والزيوت العالمية، أو قم بتغيير السيارة المحددة."
+                    : "Try unchecking the exact-fit filter to view universal parts, or change your selected vehicle."}
+                </p>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={() => setExactFitOnly(false)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-[#333] bg-slate-100 dark:bg-[#252525] px-5 py-2.5 text-xs font-bold text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-[#333] transition"
+                  >
+                    {language === "ar" ? "عرض جميع المنتجات" : "Show All Products"}
+                  </button>
+                  <button
+                    onClick={clearVehicle}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#8B3A2E] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#a34436] transition shadow-lg"
+                  >
+                    <RefreshCw className="h-4 w-4" /> {t("vehicle.clearFilter")}
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="rounded-3xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] p-12 text-center">
                 <Search className="mx-auto h-12 w-12 text-[#D4A017] mb-4 opacity-80" />

@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ShoppingBag, Heart, Eye, Star } from "lucide-react";
+import { ShoppingBag, Heart, Eye, Star, CheckCircle2 } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useVehicle } from "@/context/VehicleContext";
 import QuickViewModal from "./QuickViewModal";
 
 interface ProductCardProps {
@@ -19,10 +20,12 @@ interface ProductCardProps {
 export default function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { selectedVehicle, isCompatible } = useVehicle();
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const isLiked = isInWishlist(product.id);
+  const compatible = selectedVehicle ? isCompatible(product) : null;
 
   if (viewMode === "list") {
     return (
@@ -54,6 +57,16 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 <span className="text-xs font-bold uppercase tracking-wider text-[#D4A017]">
                   {product.brand}
                 </span>
+                {selectedVehicle && compatible && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>
+                      {language === "ar"
+                        ? `يطابق ${selectedVehicle.make} ${selectedVehicle.model}`
+                        : `Fits ${selectedVehicle.make} ${selectedVehicle.model}`}
+                    </span>
+                  </span>
+                )}
               </div>
 
               <Link href={`/product/${product.id}`} className="block group-hover:text-[#D4A017] transition-colors">
@@ -156,6 +169,16 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
             {product.isBestSeller && (
               <span className="rounded-full bg-[#D4A017] px-2.5 py-0.5 text-[10px] font-black uppercase text-black">
                 {t("card.bestSeller")}
+              </span>
+            )}
+            {selectedVehicle && compatible && (
+              <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>
+                  {language === "ar"
+                    ? `يطابق ${selectedVehicle.make} ${selectedVehicle.model}`
+                    : `Fits ${selectedVehicle.make} ${selectedVehicle.model}`}
+                </span>
               </span>
             )}
           </div>
