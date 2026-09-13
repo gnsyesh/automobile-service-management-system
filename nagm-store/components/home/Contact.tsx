@@ -1,19 +1,54 @@
 "use client";
 
-import React from "react";
-import { Phone, Mail, MapPin, Headphones } from "lucide-react";
+import React, { useState } from "react";
+import { Phone, Mail, MapPin, Headphones, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Contact() {
   const { t, language } = useLanguage();
 
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [inquiry, setInquiry] = useState("");
+  const [validationError, setValidationError] = useState("");
+
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(
-      language === "ar"
-        ? "شكراً لتواصلك مع نجم ستور! تم استلام رسالتك وسيتواصل معك أحد ممثلي خدمة العملاء قريباً."
-        : "Thank you for contacting Negm Store! Your message has been received and our team will get back to you shortly."
-    );
+
+    const trimmedName = fullName.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedInquiry = inquiry.trim();
+
+    // 1. Validate that all three fields are filled
+    if (!trimmedName || !trimmedPhone || !trimmedInquiry) {
+      setValidationError(
+        language === "ar"
+          ? "يرجى ملء جميع الحقول المطلوبة (الاسم، رقم الهاتف، وتفاصيل الاستفسار)."
+          : "Please fill in all fields (Full Name, Phone Number, and Inquiry / Car Details)."
+      );
+      return;
+    }
+
+    setValidationError("");
+
+    // 2. Format WhatsApp message
+    const message = `Hello Negm Store,
+
+I have an inquiry.
+
+Name: ${trimmedName}
+Phone: ${trimmedPhone}
+
+Inquiry / Car Details:
+${trimmedInquiry}
+
+Thank you.`;
+
+    // 3. URL-encode message & open store WhatsApp in a new tab
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/201000156578?text=${encodedMessage}`;
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -69,12 +104,25 @@ export default function Contact() {
           <div className="lg:col-span-6">
             <div className="rounded-3xl border border-slate-200 dark:border-[#D4A017]/30 bg-white dark:bg-[#1B1B1B] p-8 shadow-xl text-left rtl:text-right">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t("contact.formTitle")}</h3>
-              <form onSubmit={handleContactSubmit} className="space-y-4">
+              <form onSubmit={handleContactSubmit} noValidate className="space-y-4">
+                {validationError && (
+                  <div
+                    role="alert"
+                    className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{validationError}</span>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("contact.fullName")}</label>
                   <input
                     type="text"
-                    required
+                    value={fullName}
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (validationError) setValidationError("");
+                    }}
                     placeholder={language === "ar" ? "الاسم ثلاثي" : "Your full name"}
                     className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
                   />
@@ -83,7 +131,12 @@ export default function Contact() {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("contact.phone")}</label>
                   <input
                     type="tel"
-                    placeholder="+20 100 000 0000"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (validationError) setValidationError("");
+                    }}
+                    placeholder="010 1234 5678"
                     className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
                   />
                 </div>
@@ -91,7 +144,12 @@ export default function Contact() {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">{t("contact.inquiry")}</label>
                   <textarea
                     rows={4}
-                    placeholder="..."
+                    value={inquiry}
+                    onChange={(e) => {
+                      setInquiry(e.target.value);
+                      if (validationError) setValidationError("");
+                    }}
+                    placeholder={language === "ar" ? "اكتب استفسارك أو تفاصيل سيارتك هنا..." : "Type your inquiry or car details here..."}
                     className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none"
                   ></textarea>
                 </div>
