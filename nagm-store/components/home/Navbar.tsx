@@ -33,6 +33,62 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Product } from "@/types";
 
+// Shared in-memory and session cache to prevent repeated Firestore fetches across route navigations
+let cachedNavbarProducts: Product[] | null = null;
+let navbarFetchPromise: Promise<Product[]> | null = null;
+
+function getInitialNavbarProducts(): Product[] {
+  if (cachedNavbarProducts) return cachedNavbarProducts;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = sessionStorage.getItem("negm_navbar_products");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          cachedNavbarProducts = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {}
+  }
+  return products;
+}
+
+async function fetchAndCacheNavbarProducts(): Promise<Product[]> {
+  if (cachedNavbarProducts) return cachedNavbarProducts;
+  if (navbarFetchPromise) return navbarFetchPromise;
+
+  navbarFetchPromise = (async () => {
+    try {
+      const snap = await getDocs(collection(db, "products"));
+      if (!snap.empty) {
+        const firestoreList: Product[] = [];
+        snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
+        const firestoreIds = new Set(firestoreList.map((p) => p.id));
+        const merged = [
+          ...firestoreList,
+          ...products.filter((p) => !firestoreIds.has(p.id)),
+        ];
+        cachedNavbarProducts = merged;
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("negm_navbar_products", JSON.stringify(merged));
+          } catch (e) {}
+        }
+        return merged;
+      }
+    } catch (err) {
+      // Fallback gracefully to static catalogue
+    } finally {
+      navbarFetchPromise = null;
+    }
+    cachedNavbarProducts = products;
+    return products;
+  })();
+
+  return navbarFetchPromise;
+}
+
 export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -67,23 +123,19 @@ export default function Navbar() {
     }
   };
 
-  const [liveProducts, setLiveProducts] = useState<Product[]>(products);
+  const [liveProducts, setLiveProducts] = useState<Product[]>(getInitialNavbarProducts);
 
   useEffect(() => {
     let isMounted = true;
-    getDocs(collection(db, "products"))
-      .then((snap) => {
-        if (!snap.empty && isMounted) {
-          const firestoreList: Product[] = [];
-          snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
-          const firestoreIds = new Set(firestoreList.map((p) => p.id));
-          setLiveProducts([
-            ...firestoreList,
-            ...products.filter((p) => !firestoreIds.has(p.id)),
-          ]);
+
+    if (!cachedNavbarProducts) {
+      fetchAndCacheNavbarProducts().then((data) => {
+        if (isMounted) {
+          setLiveProducts(data);
         }
-      })
-      .catch(() => {});
+      });
+    }
+
     return () => {
       isMounted = false;
     };
