@@ -544,9 +544,55 @@ function ShopContent() {
   );
 }
 
+function ShopLoadingSkeleton() {
+  return (
+    <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-28 sm:pt-36 pb-20 transition-colors duration-300">
+      <Navbar />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1">
+        {/* Banner Skeleton */}
+        <div className="w-full h-28 rounded-3xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse mb-8" />
+
+        {/* Layout Grid */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* Sidebar Skeleton */}
+          <div className="hidden lg:block w-72 shrink-0 h-[640px] rounded-3xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+
+          {/* Main Content Area */}
+          <div className="flex-1 w-full space-y-6">
+            {/* Controls Bar Skeleton */}
+            <div className="w-full h-14 rounded-2xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+
+            {/* Product Cards Grid Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-4 space-y-4 animate-pulse"
+                >
+                  <div className="h-56 w-full rounded-xl bg-slate-200 dark:bg-[#252525]" />
+                  <div className="space-y-2 pt-2">
+                    <div className="h-4 w-1/3 bg-slate-200 dark:bg-[#252525] rounded" />
+                    <div className="h-5 w-4/5 bg-slate-200 dark:bg-[#252525] rounded" />
+                    <div className="h-3 w-1/2 bg-slate-200 dark:bg-[#252525] rounded" />
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 dark:border-[#2D2D2D] flex items-center justify-between">
+                    <div className="h-6 w-24 bg-slate-200 dark:bg-[#252525] rounded" />
+                    <div className="h-8 w-20 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </main>
+  );
+}
+
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#111111] flex items-center justify-center text-slate-900 dark:text-white font-bold">Loading Negm Shop...</div>}>
+    <Suspense fallback={<ShopLoadingSkeleton />}>
       <ShopContent />
     </Suspense>
   );

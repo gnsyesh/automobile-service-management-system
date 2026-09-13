@@ -152,7 +152,38 @@ export default function AdminOrdersPage() {
 
       {/* Orders Table */}
       <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] overflow-hidden shadow-sm dark:shadow-xl">
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left rtl:text-right">
+              <thead className="bg-slate-50 dark:bg-[#1C1C1C] border-b border-slate-200 dark:border-[#2D2D2D] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Order ID</th>
+                  <th className="py-3 px-4">Customer</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Items</th>
+                  <th className="py-3 px-4">Total</th>
+                  <th className="py-3 px-4">Payment</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right rtl:text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-[#2D2D2D]">
+                {[...Array(6)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-4"><div className="h-4 w-20 bg-slate-200 dark:bg-[#252525] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-32 bg-slate-200 dark:bg-[#252525] rounded mb-1" /><div className="h-3 w-24 bg-slate-100 dark:bg-[#202020] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-24 bg-slate-200 dark:bg-[#252525] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-14 bg-slate-200 dark:bg-[#252525] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-16 bg-slate-200 dark:bg-[#252525] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-14 bg-slate-200 dark:bg-[#252525] rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-6 w-20 bg-slate-200 dark:bg-[#252525] rounded-lg" /></td>
+                    <td className="py-4 px-4 text-right rtl:text-left"><div className="h-7 w-16 bg-slate-200 dark:bg-[#252525] rounded-lg ml-auto rtl:ml-0 rtl:mr-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left rtl:text-right">
               <thead className="bg-slate-50 dark:bg-[#1C1C1C] border-b border-slate-200 dark:border-[#2D2D2D] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">

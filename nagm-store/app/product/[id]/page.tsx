@@ -95,12 +95,49 @@ export default function ProductDetailPage() {
     return (
       <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
         <Navbar />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <RefreshCw className="h-8 w-8 animate-spin text-[#D4A017]" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {language === "ar" ? "جاري تحميل تفاصيل المنتج..." : "Loading product details..."}
-            </p>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1">
+          {/* Breadcrumbs Skeleton */}
+          <div className="h-4 w-64 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse mb-8" />
+
+          {/* Product Details Top Section Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* Left Gallery Skeleton */}
+            <div className="lg:col-span-6 space-y-4">
+              <div className="h-[380px] sm:h-[450px] w-full rounded-3xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+              <div className="flex gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-16 w-16 rounded-xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+                ))}
+              </div>
+            </div>
+
+            {/* Right Details Skeleton */}
+            <div className="lg:col-span-6 space-y-6">
+              <div className="space-y-3">
+                <div className="h-4 w-36 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse" />
+                <div className="h-8 w-4/5 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse" />
+                <div className="h-4 w-48 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse" />
+              </div>
+
+              {/* Price Banner Skeleton */}
+              <div className="h-20 w-full rounded-2xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+
+              {/* Fitment Banner Skeleton */}
+              <div className="h-16 w-full rounded-2xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+
+              {/* Actions Skeleton */}
+              <div className="flex gap-4">
+                <div className="h-12 w-32 rounded-xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+                <div className="h-12 flex-1 rounded-xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+              </div>
+
+              {/* Guarantee badges skeleton */}
+              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-200 dark:border-[#2D2D2D]">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-14 rounded-xl bg-slate-200 dark:bg-[#1B1B1B] animate-pulse" />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
         <Footer />

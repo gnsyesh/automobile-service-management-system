@@ -569,7 +569,11 @@ export default function AdminDashboardPage() {
 
             <div className="mt-4">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                {loading ? "..." : `${metrics.revenue.toLocaleString()} EGP`}
+                {loading ? (
+                  <div className="h-9 w-44 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+                ) : (
+                  `${metrics.revenue.toLocaleString()} EGP`
+                )}
               </div>
 
               {compareEnabled && comparison ? (
@@ -613,7 +617,11 @@ export default function AdminDashboardPage() {
 
             <div className="mt-4">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                {loading ? "..." : metrics.ordersCount}
+                {loading ? (
+                  <div className="h-9 w-20 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+                ) : (
+                  metrics.ordersCount
+                )}
               </div>
 
               {compareEnabled && comparison ? (
@@ -657,7 +665,11 @@ export default function AdminDashboardPage() {
 
             <div className="mt-4">
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                {loading ? "..." : `${metrics.averageOrderValue.toLocaleString()} EGP`}
+                {loading ? (
+                  <div className="h-9 w-36 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+                ) : (
+                  `${metrics.averageOrderValue.toLocaleString()} EGP`
+                )}
               </div>
 
               {compareEnabled && comparison ? (
@@ -710,7 +722,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
-              {loading ? "..." : customersCount}
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+              ) : (
+                customersCount
+              )}
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-[#222]">
               <span>{language === "ar" ? "مشترين نشطين:" : "Active buyers:"}</span>
@@ -731,7 +747,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
-              {loading ? "..." : purchasedUnitsCount}
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+              ) : (
+                purchasedUnitsCount
+              )}
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 pt-2 border-t border-slate-100 dark:border-[#222]">
               <span>{language === "ar" ? "قطع غيار مختلفة:" : "Distinct products:"}</span>
@@ -752,7 +772,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-black text-orange-500">
-              {loading ? "..." : pendingOrdersCount}
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+              ) : (
+                pendingOrdersCount
+              )}
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 dark:border-[#222]">
               <span className="text-slate-500 dark:text-gray-400">{language === "ar" ? "بحاجة للتجهيز" : "Needs dispatch"}</span>
@@ -777,7 +801,11 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-2xl font-black text-rose-600 dark:text-rose-400">
-              {loading ? "..." : lowStockCount}
+              {loading ? (
+                <div className="h-8 w-16 bg-slate-200 dark:bg-neutral-800 rounded animate-pulse" />
+              ) : (
+                lowStockCount
+              )}
             </div>
             <div className="mt-2 flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 dark:border-[#222]">
               <span className="text-slate-500 dark:text-gray-400">{language === "ar" ? "المخزون ≤ 5 قطع" : "Stock ≤ 5 units"}</span>
@@ -1241,7 +1269,36 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        {recentOrders.length > 0 ? (
+        {loading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left rtl:text-right">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-[#2D2D2D] text-slate-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Order ID</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Customer</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Date</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Items</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Total</th>
+                  <th className="pb-3 pr-4 rtl:pr-0 rtl:pl-4">Status</th>
+                  <th className="pb-3 text-right rtl:text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-[#2D2D2D]">
+                {[...Array(5)].map((_, idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-4 w-16 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-4 w-28 bg-slate-200 dark:bg-neutral-800 rounded mb-1" /><div className="h-3 w-36 bg-slate-100 dark:bg-neutral-900 rounded" /></td>
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-4 w-20 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-4 w-12 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-4 w-16 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 pr-4 rtl:pr-0 rtl:pl-4"><div className="h-5 w-20 bg-slate-200 dark:bg-neutral-800 rounded-full" /></td>
+                    <td className="py-4 text-right rtl:text-left"><div className="h-7 w-16 bg-slate-200 dark:bg-neutral-800 rounded-lg ml-auto rtl:ml-0 rtl:mr-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : recentOrders.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left rtl:text-right">
               <thead>

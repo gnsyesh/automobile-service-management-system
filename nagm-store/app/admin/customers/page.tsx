@@ -209,9 +209,43 @@ export default function AdminCustomersPage() {
 
       {/* Customers List */}
       {loading ? (
-        <div className="p-12 text-center text-slate-400">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-[#D4A017]" />
-          <p>{language === "ar" ? "جاري تحميل حسابات العملاء..." : "Loading customer accounts..."}</p>
+        <div className="bg-white dark:bg-[#1B1B1B] rounded-2xl border border-slate-200 dark:border-[#2D2D2D] shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left rtl:text-right border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#222] text-xs uppercase font-bold text-slate-500 dark:text-gray-400">
+                  <th className="py-3.5 px-4">{language === "ar" ? "العميل" : "Customer"}</th>
+                  <th className="py-3.5 px-4">{language === "ar" ? "الدور والصلاحية" : "Role"}</th>
+                  <th className="py-3.5 px-4">{language === "ar" ? "الاتصال" : "Contact"}</th>
+                  <th className="py-3.5 px-4">{language === "ar" ? "الطلبات والمشتريات" : "Orders & Spend"}</th>
+                  <th className="py-3.5 px-4">{language === "ar" ? "العنوان المسجل" : "Registered Address"}</th>
+                  <th className="py-3.5 px-4">{language === "ar" ? "تاريخ التسجيل" : "Joined"}</th>
+                  <th className="py-3.5 px-4 text-right rtl:text-left">{language === "ar" ? "الإجراءات" : "Actions"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-[#252525]">
+                {[...Array(6)].map((_, idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-neutral-800" />
+                        <div className="space-y-1">
+                          <div className="h-4 w-28 bg-slate-200 dark:bg-neutral-800 rounded" />
+                          <div className="h-3 w-36 bg-slate-100 dark:bg-neutral-900 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4"><div className="h-5 w-16 bg-slate-200 dark:bg-neutral-800 rounded-full" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-24 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-20 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-32 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 px-4"><div className="h-4 w-20 bg-slate-200 dark:bg-neutral-800 rounded" /></td>
+                    <td className="py-4 px-4 text-right rtl:text-left"><div className="h-7 w-16 bg-slate-200 dark:bg-neutral-800 rounded-lg ml-auto rtl:ml-0 rtl:mr-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white dark:bg-[#1B1B1B] p-12 text-center rounded-2xl border border-slate-200 dark:border-[#2D2D2D] shadow-sm">

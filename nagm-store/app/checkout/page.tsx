@@ -280,11 +280,41 @@ export default function CheckoutPage() {
 
   if (authLoading || !user) {
     return (
-      <main className="min-h-screen bg-slate-50 dark:bg-[#111111] flex flex-col justify-center items-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#D4A017] mb-3" />
-        <p className="text-sm font-semibold text-slate-600 dark:text-gray-400">
-          {language === "ar" ? "جاري التحقق من الحساب..." : "Verifying account..."}
-        </p>
+      <main className="min-h-screen bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 flex flex-col pt-24 sm:pt-32 pb-20 transition-colors duration-300">
+        <Navbar />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full flex-1">
+          {/* Header Skeleton */}
+          <div className="border-b border-slate-200 dark:border-[#2D2D2D] pb-6 mb-8 space-y-2">
+            <div className="h-4 w-32 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse" />
+            <div className="h-8 w-64 bg-slate-200 dark:bg-[#1B1B1B] rounded animate-pulse" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Form Skeleton */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-6 sm:p-8 space-y-4 animate-pulse">
+                <div className="h-6 w-48 bg-slate-200 dark:bg-[#252525] rounded" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="h-12 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                  <div className="h-12 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                </div>
+                <div className="h-12 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                <div className="h-12 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+              </div>
+            </div>
+
+            {/* Right Summary Skeleton */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-6 space-y-4 animate-pulse">
+                <div className="h-6 w-36 bg-slate-200 dark:bg-[#252525] rounded" />
+                <div className="h-16 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                <div className="h-20 bg-slate-200 dark:bg-[#252525] rounded-xl" />
+                <div className="h-12 w-full bg-slate-200 dark:bg-[#252525] rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </main>
     );
   }
