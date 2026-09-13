@@ -76,8 +76,14 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // Fetch independent Firestore collections concurrently
+      const [ordersSnapshot, usersSnapshot, prodsSnapshot] = await Promise.all([
+        getDocs(collection(db, "orders")),
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "products")),
+      ]);
+
       // 1. Orders
-      const ordersSnapshot = await getDocs(collection(db, "orders"));
       const fetchedOrders: Order[] = [];
       ordersSnapshot.forEach((docSnap) => {
         fetchedOrders.push({ id: docSnap.id, ...(docSnap.data() as any) });
@@ -85,13 +91,12 @@ export default function AdminDashboardPage() {
       // Sort newest first
       fetchedOrders.sort((a, b) => {
         const da = getOrderDate(a)?.getTime() || 0;
-        const db = getOrderDate(b)?.getTime() || 0;
-        return db - da;
+        const dbDate = getOrderDate(b)?.getTime() || 0;
+        return dbDate - da;
       });
       setOrders(fetchedOrders);
 
       // 2. Customers / Users
-      const usersSnapshot = await getDocs(collection(db, "users"));
       const userList: UserProfile[] = [];
       usersSnapshot.forEach((docSnap) => {
         userList.push({ uid: docSnap.id, ...(docSnap.data() as any) });
@@ -100,7 +105,6 @@ export default function AdminDashboardPage() {
       setCustomersCount(userList.length);
 
       // 3. Products
-      const prodsSnapshot = await getDocs(collection(db, "products"));
       if (!prodsSnapshot.empty) {
         const firestoreProds: Product[] = [];
         prodsSnapshot.forEach((p) => {
