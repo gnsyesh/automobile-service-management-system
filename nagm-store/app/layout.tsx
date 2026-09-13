@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Cairo } from "next/font/google";
+import { Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -10,19 +10,10 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { CartProvider } from "@/context/CartContext";
 import VehicleSelectorModal from "@/components/common/VehicleSelectorModal";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic", "latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} h-full w-full max-w-full antialiased`}
+      className={`${cairo.variable} h-full w-full max-w-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full w-full max-w-full min-w-0 flex flex-col bg-slate-50 text-[#0F172A] dark:bg-[#111111] dark:text-gray-100 selection:bg-[#8B3A2E] selection:text-white transition-colors duration-300">
