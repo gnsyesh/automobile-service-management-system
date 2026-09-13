@@ -205,6 +205,7 @@ export default function ProductDetailPage() {
                 alt={product.name}
                 fill
                 priority
+                sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 50vw, 600px"
                 className="object-contain p-4 transition-transform duration-500 hover:scale-105"
               />
 
@@ -236,7 +237,7 @@ export default function ProductDetailPage() {
                         : "border-[#2D2D2D] opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <Image src={img} alt="" fill className="object-contain p-2" />
+                    <Image src={img} alt="" fill sizes="64px" className="object-contain p-2" />
                   </button>
                 ))}
               </div>
@@ -424,7 +425,7 @@ export default function ProductDetailPage() {
                 {/* Main item */}
                 <div className="flex items-center gap-3 rounded-2xl border border-[#2D2D2D] bg-[#111111] p-3 w-64">
                   <div className="relative h-14 w-14 shrink-0 bg-[#1B1B1B] rounded-xl overflow-hidden">
-                    <Image src={product.images[0]} alt="" fill className="object-contain p-1" />
+                    <Image src={product.images[0]} alt="" fill sizes="64px" className="object-contain p-1" />
                   </div>
                   <div className="text-xs">
                     <div className="font-bold text-white line-clamp-1">{product.name}</div>
@@ -438,7 +439,7 @@ export default function ProductDetailPage() {
                     <Plus className="h-5 w-5 text-[#D4A017]" />
                     <div className="flex items-center gap-3 rounded-2xl border border-[#2D2D2D] bg-[#111111] p-3 w-64">
                       <div className="relative h-14 w-14 shrink-0 bg-[#1B1B1B] rounded-xl overflow-hidden">
-                        <Image src={item?.images[0] || ""} alt="" fill className="object-contain p-1" />
+                        <Image src={item?.images[0] || ""} alt="" fill sizes="64px" className="object-contain p-1" />
                       </div>
                       <div className="text-xs">
                         <div className="font-bold text-white line-clamp-1">{item?.name}</div>

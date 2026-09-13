@@ -41,6 +41,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
               src={product.images[0]}
               alt={product.name}
               fill
+              sizes="(max-width: 768px) 100vw, 224px"
               className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
             />
             {product.discount && (
@@ -212,6 +213,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
               src={product.images[0]}
               alt={product.name}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
               className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
             />
           </Link>
