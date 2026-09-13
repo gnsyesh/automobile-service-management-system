@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
 } from "react";
 
 import {
@@ -381,111 +382,120 @@ export function AuthProvider({
   // EMAIL / PASSWORD LOGIN
   // ---------------------------------------------------------
 
-  const signIn = async (
-    email: string,
-    password: string
-  ): Promise<User> => {
-    const credential = await signInWithEmailAndPassword(
-      auth,
-      email.trim(),
-      password
-    );
+  const signIn = useCallback(
+    async (
+      email: string,
+      password: string
+    ): Promise<User> => {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
 
-    await updateAuthState(credential.user);
+      await updateAuthState(credential.user);
 
-    return credential.user;
-  };
+      return credential.user;
+    },
+    [updateAuthState]
+  );
 
   // ---------------------------------------------------------
   // SIGN UP
   // ---------------------------------------------------------
 
-  const signUp = async (
-    email: string,
-    password: string,
-    name: string,
-    phone?: string
-  ): Promise<User> => {
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      email.trim(),
-      password
-    );
-
-    const newUser = credential.user;
-
-    await updateProfile(newUser, {
-      displayName: name.trim(),
-    });
-
-    const newProfile: UserProfile = {
-      uid: newUser.uid,
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone?.trim() || "",
-      role: "user",
-      provider: "password",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    try {
-      await setDoc(
-        doc(db, "users", newUser.uid),
-        {
-          ...newProfile,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      name: string,
+      phone?: string
+    ): Promise<User> => {
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
       );
-    } catch (firestoreError) {
-      console.error("Firestore user profile save error:", firestoreError);
-    }
 
-    try {
-      await sendEmailVerification(newUser);
-    } catch (verificationError) {
-      console.error("Verification email error:", verificationError);
-    }
+      const newUser = credential.user;
 
-    await updateAuthState(newUser);
+      await updateProfile(newUser, {
+        displayName: name.trim(),
+      });
 
-    return newUser;
-  };
+      const newProfile: UserProfile = {
+        uid: newUser.uid,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone?.trim() || "",
+        role: "user",
+        provider: "password",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      try {
+        await setDoc(
+          doc(db, "users", newUser.uid),
+          {
+            ...newProfile,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (firestoreError) {
+        console.error("Firestore user profile save error:", firestoreError);
+      }
+
+      try {
+        await sendEmailVerification(newUser);
+      } catch (verificationError) {
+        console.error("Verification email error:", verificationError);
+      }
+
+      await updateAuthState(newUser);
+
+      return newUser;
+    },
+    [updateAuthState]
+  );
 
   // ---------------------------------------------------------
   // GOOGLE LOGIN
   // ---------------------------------------------------------
 
-  const signInWithGoogle = async (): Promise<User | null> => {
-    const provider = new GoogleAuthProvider();
+  const signInWithGoogle = useCallback(
+    async (): Promise<User | null> => {
+      const provider = new GoogleAuthProvider();
 
-    provider.setCustomParameters({
-      prompt: "select_account",
-    });
+      provider.setCustomParameters({
+        prompt: "select_account",
+      });
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      await updateAuthState(result.user);
-      return result.user;
-    } catch (error: unknown) {
-      // Popup blocked / unavailable: fallback to redirect
-      const err = error as { code?: string };
-      if (err?.code === "auth/popup-blocked") {
-        await signInWithRedirect(auth, provider);
-        return null;
+      try {
+        const result = await signInWithPopup(auth, provider);
+        await updateAuthState(result.user);
+        return result.user;
+      } catch (error: unknown) {
+        // Popup blocked / unavailable: fallback to redirect
+        const err = error as { code?: string };
+        if (err?.code === "auth/popup-blocked") {
+          await signInWithRedirect(auth, provider);
+          return null;
+        }
+
+        throw error;
       }
-
-      throw error;
-    }
-  };
+    },
+    [updateAuthState]
+  );
 
   // ---------------------------------------------------------
   // SIGN OUT (PURGES USER-SCOPED STORAGE)
   // ---------------------------------------------------------
 
-  const logOut = async (): Promise<void> => {
+  const logOut = useCallback(async (): Promise<void> => {
     try {
       await signOut(auth);
     } catch (error) {
@@ -512,22 +522,22 @@ export function AuthProvider({
         console.error("Error clearing user storage:", storageErr);
       }
     }
-  };
+  }, []);
 
   // ---------------------------------------------------------
   // REFRESH PROFILE
   // ---------------------------------------------------------
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!auth.currentUser) return;
     await fetchUserProfile(auth.currentUser, isAdmin);
-  };
+  }, [fetchUserProfile, isAdmin]);
 
   // ---------------------------------------------------------
   // RELOAD USER
   // ---------------------------------------------------------
 
-  const reloadUser = async () => {
+  const reloadUser = useCallback(async () => {
     if (!auth.currentUser) return;
 
     try {
@@ -549,13 +559,13 @@ export function AuthProvider({
 
     const adminStatus = await checkAdminStatus(currentUser);
     await fetchUserProfile(currentUser, adminStatus.isAdmin);
-  };
+  }, [checkAdminStatus, fetchUserProfile]);
 
   // ---------------------------------------------------------
   // SEND VERIFICATION EMAIL
   // ---------------------------------------------------------
 
-  const sendVerificationEmail = async () => {
+  const sendVerificationEmail = useCallback(async () => {
     if (!auth.currentUser) {
       throw new Error("No authenticated user.");
     }
@@ -565,30 +575,47 @@ export function AuthProvider({
     }
 
     await sendEmailVerification(auth.currentUser);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      userProfile,
+      profile: userProfile,
+      role,
+      isAdmin,
+      loading,
+      emailVerified,
+
+      signIn,
+      signUp,
+      signInWithGoogle,
+      logOut,
+      signOutUser: logOut,
+
+      refreshProfile,
+      reloadUser,
+      sendVerificationEmail,
+    }),
+    [
+      user,
+      userProfile,
+      role,
+      isAdmin,
+      loading,
+      emailVerified,
+      signIn,
+      signUp,
+      signInWithGoogle,
+      logOut,
+      refreshProfile,
+      reloadUser,
+      sendVerificationEmail,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        userProfile,
-        profile: userProfile,
-        role,
-        isAdmin,
-        loading,
-        emailVerified,
-
-        signIn,
-        signUp,
-        signInWithGoogle,
-        logOut,
-        signOutUser: logOut,
-
-        refreshProfile,
-        reloadUser,
-        sendVerificationEmail,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

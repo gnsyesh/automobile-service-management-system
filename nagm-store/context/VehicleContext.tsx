@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Vehicle, Product } from "@/types";
 import { useToast } from "./ToastContext";
 import { useAuth } from "./AuthContext";
@@ -51,18 +51,21 @@ export const VehicleProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isLoadedForUidRef.current = activeUid;
   }, [activeUid, authLoading]);
 
-  const setSelectedVehicle = (vehicle: Vehicle) => {
-    setSelectedVehicleState(vehicle);
-    try {
-      localStorage.setItem(`negm_selected_vehicle_${activeUid}`, JSON.stringify(vehicle));
-    } catch (e) {
-      console.error("Failed to save vehicle state", e);
-    }
-    showToast(`Active Vehicle set to ${vehicle.year} ${vehicle.make} ${vehicle.model}!`, "success");
-    setIsVehicleModalOpen(false);
-  };
+  const setSelectedVehicle = useCallback(
+    (vehicle: Vehicle) => {
+      setSelectedVehicleState(vehicle);
+      try {
+        localStorage.setItem(`negm_selected_vehicle_${activeUid}`, JSON.stringify(vehicle));
+      } catch (e) {
+        console.error("Failed to save vehicle state", e);
+      }
+      showToast(`Active Vehicle set to ${vehicle.year} ${vehicle.make} ${vehicle.model}!`, "success");
+      setIsVehicleModalOpen(false);
+    },
+    [activeUid, showToast]
+  );
 
-  const clearVehicle = () => {
+  const clearVehicle = useCallback(() => {
     setSelectedVehicleState(null);
     try {
       localStorage.removeItem(`negm_selected_vehicle_${activeUid}`);
@@ -70,48 +73,60 @@ export const VehicleProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error("Failed to remove vehicle state", e);
     }
     showToast("Vehicle filter cleared.", "info");
-  };
+  }, [activeUid, showToast]);
 
-  const isCompatible = (product: Product): boolean => {
-    if (!selectedVehicle) return true;
-    if (!product.compatibility || product.compatibility.length === 0) {
-      // Products without matching compatibility must NOT be shown when exact-fit filtering is active
-      return false;
-    }
+  const isCompatible = useCallback(
+    (product: Product): boolean => {
+      if (!selectedVehicle) return true;
+      if (!product.compatibility || product.compatibility.length === 0) {
+        // Products without matching compatibility must NOT be shown when exact-fit filtering is active
+        return false;
+      }
 
-    return product.compatibility.some((comp) => {
-      const makeMatch = comp.make.toLowerCase() === selectedVehicle.make.toLowerCase();
-      const modelMatch =
-        comp.model.toLowerCase() === "all" ||
-        comp.model.toLowerCase() === "universal" ||
-        comp.model.toLowerCase().includes(selectedVehicle.model.toLowerCase()) ||
-        selectedVehicle.model.toLowerCase().includes(comp.model.toLowerCase());
-      const yearMatch =
-        selectedVehicle.year >= comp.yearStart && selectedVehicle.year <= comp.yearEnd;
+      return product.compatibility.some((comp) => {
+        const makeMatch = comp.make.toLowerCase() === selectedVehicle.make.toLowerCase();
+        const modelMatch =
+          comp.model.toLowerCase() === "all" ||
+          comp.model.toLowerCase() === "universal" ||
+          comp.model.toLowerCase().includes(selectedVehicle.model.toLowerCase()) ||
+          selectedVehicle.model.toLowerCase().includes(comp.model.toLowerCase());
+        const yearMatch =
+          selectedVehicle.year >= comp.yearStart && selectedVehicle.year <= comp.yearEnd;
 
-      const engineMatch =
-        !comp.engine ||
-        !selectedVehicle.engine ||
-        comp.engine.toLowerCase() === "all" ||
-        comp.engine.toLowerCase() === "universal" ||
-        comp.engine.toLowerCase().includes(selectedVehicle.engine.toLowerCase()) ||
-        selectedVehicle.engine.toLowerCase().includes(comp.engine.toLowerCase());
+        const engineMatch =
+          !comp.engine ||
+          !selectedVehicle.engine ||
+          comp.engine.toLowerCase() === "all" ||
+          comp.engine.toLowerCase() === "universal" ||
+          comp.engine.toLowerCase().includes(selectedVehicle.engine.toLowerCase()) ||
+          selectedVehicle.engine.toLowerCase().includes(comp.engine.toLowerCase());
 
-      return makeMatch && modelMatch && yearMatch && engineMatch;
-    });
-  };
+        return makeMatch && modelMatch && yearMatch && engineMatch;
+      });
+    },
+    [selectedVehicle]
+  );
+
+  const value = useMemo(
+    () => ({
+      selectedVehicle,
+      setSelectedVehicle,
+      clearVehicle,
+      isCompatible,
+      isVehicleModalOpen,
+      setIsVehicleModalOpen,
+    }),
+    [
+      selectedVehicle,
+      setSelectedVehicle,
+      clearVehicle,
+      isCompatible,
+      isVehicleModalOpen,
+    ]
+  );
 
   return (
-    <VehicleContext.Provider
-      value={{
-        selectedVehicle,
-        setSelectedVehicle,
-        clearVehicle,
-        isCompatible,
-        isVehicleModalOpen,
-        setIsVehicleModalOpen,
-      }}
-    >
+    <VehicleContext.Provider value={value}>
       {children}
     </VehicleContext.Provider>
   );

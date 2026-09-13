@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { CartItem, Product, Coupon } from "@/types";
 import { coupons } from "@/data/coupons";
 import { useToast } from "./ToastContext";
@@ -89,46 +89,55 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [cart, coupon, activeUid, authLoading]);
 
-  const addToCart = (product: Product, quantity = 1) => {
-    setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex((item) => item.product.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prevCart];
-        const newQty = updated[existingIndex].quantity + quantity;
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: newQty > product.stockCount ? product.stockCount : newQty,
-        };
-        return updated;
-      } else {
-        return [...prevCart, { product, quantity: Math.min(quantity, product.stockCount) }];
-      }
-    });
-    showToast(`Added "${product.name.slice(0, 30)}..." to Cart!`, "success");
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
-    showToast("Item removed from cart.", "info");
-  };
-
-  const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-    setCart((prevCart) =>
-      prevCart.map((item) => {
-        if (item.product.id === productId) {
-          const validQty = Math.min(quantity, item.product.stockCount);
-          return { ...item, quantity: validQty };
+  const addToCart = useCallback(
+    (product: Product, quantity = 1) => {
+      setCart((prevCart) => {
+        const existingIndex = prevCart.findIndex((item) => item.product.id === product.id);
+        if (existingIndex > -1) {
+          const updated = [...prevCart];
+          const newQty = updated[existingIndex].quantity + quantity;
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            quantity: newQty > product.stockCount ? product.stockCount : newQty,
+          };
+          return updated;
+        } else {
+          return [...prevCart, { product, quantity: Math.min(quantity, product.stockCount) }];
         }
-        return item;
-      })
-    );
-  };
+      });
+      showToast(`Added "${product.name.slice(0, 30)}..." to Cart!`, "success");
+    },
+    [showToast]
+  );
 
-  const clearCart = () => {
+  const removeFromCart = useCallback(
+    (productId: string) => {
+      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+      showToast("Item removed from cart.", "info");
+    },
+    [showToast]
+  );
+
+  const updateQuantity = useCallback(
+    (productId: string, quantity: number) => {
+      if (quantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      setCart((prevCart) =>
+        prevCart.map((item) => {
+          if (item.product.id === productId) {
+            const validQty = Math.min(quantity, item.product.stockCount);
+            return { ...item, quantity: validQty };
+          }
+          return item;
+        })
+      );
+    },
+    [removeFromCart]
+  );
+
+  const clearCart = useCallback(() => {
     setCart([]);
     setCoupon(null);
     try {
@@ -137,45 +146,50 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error("Failed to clear cart in localStorage", e);
     }
-  };
+  }, [activeUid]);
 
-  const applyCoupon = (code: string) => {
-    const cleanCode = code.trim().toUpperCase();
-    const foundCoupon = coupons.find((c) => c.code === cleanCode);
-    
-    if (!foundCoupon) {
-      return { success: false, message: "Invalid coupon code. Try NEGM10 or WELCOME15" };
-    }
+  const applyCoupon = useCallback(
+    (code: string) => {
+      const cleanCode = code.trim().toUpperCase();
+      const foundCoupon = coupons.find((c) => c.code === cleanCode);
+      
+      if (!foundCoupon) {
+        return { success: false, message: "Invalid coupon code. Try NEGM10 or WELCOME15" };
+      }
 
-    const currentSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+      const currentSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-    if (currentSubtotal < foundCoupon.minSubtotal) {
-      return { 
-        success: false, 
-        message: `Coupon requires minimum subtotal of ${foundCoupon.minSubtotal} EGP` 
-      };
-    }
+      if (currentSubtotal < foundCoupon.minSubtotal) {
+        return { 
+          success: false, 
+          message: `Coupon requires minimum subtotal of ${foundCoupon.minSubtotal} EGP` 
+        };
+      }
 
-    setCoupon(foundCoupon);
-    showToast(`Coupon "${foundCoupon.code}" applied successfully!`, "success");
-    return { success: true, message: `Coupon applied: ${foundCoupon.description}` };
-  };
+      setCoupon(foundCoupon);
+      showToast(`Coupon "${foundCoupon.code}" applied successfully!`, "success");
+      return { success: true, message: `Coupon applied: ${foundCoupon.description}` };
+    },
+    [cart, showToast]
+  );
 
-  const removeCoupon = () => {
+  const removeCoupon = useCallback(() => {
     setCoupon(null);
     showToast("Coupon removed.", "info");
-  };
+  }, [showToast]);
 
-  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = useMemo(
+    () => cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [cart]
+  );
   
-  let discountAmount = 0;
-  if (coupon) {
+  const discountAmount = useMemo(() => {
+    if (!coupon) return 0;
     if (coupon.discountType === "percentage") {
-      discountAmount = (subtotal * coupon.value) / 100;
-    } else {
-      discountAmount = coupon.value;
+      return (subtotal * coupon.value) / 100;
     }
-  }
+    return coupon.value;
+  }, [coupon, subtotal]);
 
   const amountAfterDiscount = Math.max(0, subtotal - discountAmount);
   
@@ -186,27 +200,48 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const vat = Math.round(amountAfterDiscount * 0.14);
 
   const total = Math.round(amountAfterDiscount + shipping + vat);
-  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart]
+  );
+
+  const value = useMemo(
+    () => ({
+      cart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      coupon,
+      applyCoupon,
+      removeCoupon,
+      subtotal,
+      discountAmount,
+      shipping,
+      vat,
+      total,
+      itemCount,
+    }),
+    [
+      cart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      coupon,
+      applyCoupon,
+      removeCoupon,
+      subtotal,
+      discountAmount,
+      shipping,
+      vat,
+      total,
+      itemCount,
+    ]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        coupon,
-        applyCoupon,
-        removeCoupon,
-        subtotal,
-        discountAmount,
-        shipping,
-        vat,
-        total,
-        itemCount,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

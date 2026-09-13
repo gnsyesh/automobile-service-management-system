@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Product } from "@/types";
 import { useToast } from "./ToastContext";
 import { useAuth } from "./AuthContext";
@@ -66,51 +66,73 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [wishlist, activeUid, authLoading]);
 
-  const isInWishlist = (productId: string) => {
-    return wishlist.some((item) => item.id === productId);
-  };
+  const isInWishlist = useCallback(
+    (productId: string) => {
+      return wishlist.some((item) => item.id === productId);
+    },
+    [wishlist]
+  );
 
-  const addToWishlist = (product: Product) => {
-    if (!isInWishlist(product.id)) {
-      setWishlist((prev) => [...prev, product]);
-      showToast(`Saved "${product.name.slice(0, 30)}..." to Wishlist!`, "success");
-    }
-  };
+  const addToWishlist = useCallback(
+    (product: Product) => {
+      if (!wishlist.some((item) => item.id === product.id)) {
+        setWishlist((prev) => [...prev, product]);
+        showToast(`Saved "${product.name.slice(0, 30)}..." to Wishlist!`, "success");
+      }
+    },
+    [wishlist, showToast]
+  );
 
-  const removeFromWishlist = (productId: string) => {
-    setWishlist((prev) => prev.filter((item) => item.id !== productId));
-    showToast("Removed from Wishlist.", "info");
-  };
+  const removeFromWishlist = useCallback(
+    (productId: string) => {
+      setWishlist((prev) => prev.filter((item) => item.id !== productId));
+      showToast("Removed from Wishlist.", "info");
+    },
+    [showToast]
+  );
 
-  const toggleWishlist = (product: Product) => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist(product);
-    }
-  };
+  const toggleWishlist = useCallback(
+    (product: Product) => {
+      if (wishlist.some((item) => item.id === product.id)) {
+        removeFromWishlist(product.id);
+      } else {
+        addToWishlist(product);
+      }
+    },
+    [wishlist, removeFromWishlist, addToWishlist]
+  );
 
-  const clearWishlist = () => {
+  const clearWishlist = useCallback(() => {
     setWishlist([]);
     try {
       localStorage.removeItem(`negm_wishlist_${activeUid}`);
     } catch (e) {
       console.error("Failed to clear wishlist in localStorage", e);
     }
-  };
+  }, [activeUid]);
+
+  const value = useMemo(
+    () => ({
+      wishlist,
+      isInWishlist,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      clearWishlist,
+      wishlistCount: wishlist.length,
+    }),
+    [
+      wishlist,
+      isInWishlist,
+      addToWishlist,
+      removeFromWishlist,
+      toggleWishlist,
+      clearWishlist,
+    ]
+  );
 
   return (
-    <WishlistContext.Provider
-      value={{
-        wishlist,
-        isInWishlist,
-        addToWishlist,
-        removeFromWishlist,
-        toggleWishlist,
-        clearWishlist,
-        wishlistCount: wishlist.length,
-      }}
-    >
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { en, TranslationKey } from "@/locales/en";
 import { ar } from "@/locales/ar";
 
@@ -58,21 +58,27 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsInitialized(true);
   }, []);
 
-  const setLanguage = (lang: LanguageMode) => {
+  const setLanguage = useCallback((lang: LanguageMode) => {
     setLanguageState(lang);
     try {
       localStorage.setItem("negm_language", lang);
     } catch (e) {
       console.error(e);
     }
-  };
+  }, []);
 
-  const currentLanguageConfig = languages.find((l) => l.code === language) || languages[0];
+  const currentLanguageConfig = useMemo(
+    () => languages.find((l) => l.code === language) || languages[0],
+    [language]
+  );
 
-  const t = (key: TranslationKey): string => {
-    const dict = language === "ar" ? ar : en;
-    return dict[key] || en[key] || key;
-  };
+  const t = useCallback(
+    (key: TranslationKey): string => {
+      const dict = language === "ar" ? ar : en;
+      return dict[key] || en[key] || key;
+    },
+    [language]
+  );
 
   useEffect(() => {
     if (isInitialized) {
@@ -86,15 +92,18 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [language, currentLanguageConfig, isInitialized]);
 
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage,
+      currentLanguageConfig,
+      t,
+    }),
+    [language, setLanguage, currentLanguageConfig, t]
+  );
+
   return (
-    <LanguageContext.Provider
-      value={{
-        language,
-        setLanguage,
-        currentLanguageConfig,
-        t,
-      }}
-    >
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
