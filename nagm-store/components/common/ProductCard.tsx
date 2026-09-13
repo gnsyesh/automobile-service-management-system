@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ShoppingBag, Heart, Eye, Star, CheckCircle2 } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
@@ -30,10 +29,8 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
   if (viewMode === "list") {
     return (
       <>
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="group relative flex flex-col md:flex-row items-center gap-6 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-5 backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017]/50 hover:shadow-xl shadow-sm"
+        <div
+          className="group relative flex flex-col md:flex-row items-center gap-6 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-5 backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017]/50 hover:shadow-xl shadow-sm animate-in fade-in duration-300"
         >
           {/* Image */}
           <div className="relative h-48 w-full md:w-56 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-[#111111]">
@@ -138,7 +135,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <QuickViewModal
           product={product}
@@ -151,12 +148,8 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3 }}
-        className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-4 backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017]/50 hover:shadow-xl shadow-sm hover:-translate-y-1 text-left rtl:text-right"
+      <div
+        className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B]/80 p-4 backdrop-blur-xl transition-all duration-300 hover:border-[#D4A017]/50 hover:shadow-xl shadow-sm hover:-translate-y-1 text-left rtl:text-right animate-in fade-in duration-300"
       >
         {/* Top Badges & Heart */}
         <div className="relative h-56 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-[#111111] p-4 flex items-center justify-center">
@@ -263,7 +256,7 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <QuickViewModal
         product={product}
