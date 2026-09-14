@@ -69,7 +69,7 @@ export default function ProductDetailPage() {
         if (snap.exists()) {
           setProduct({ id: snap.id, ...(snap.data() as any) });
           setNotFound(false);
-        } else if (!staticProd) {
+        } else {
           setProduct(null);
           setNotFound(true);
         }

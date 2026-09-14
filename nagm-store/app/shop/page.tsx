@@ -75,12 +75,7 @@ function ShopContent() {
           if (snap && !snap.empty) {
             const firestoreList: Product[] = [];
             snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
-            const firestoreIds = new Set(firestoreList.map((p) => p.id));
-            const merged = [
-              ...firestoreList,
-              ...products.filter((p) => !firestoreIds.has(p.id)),
-            ];
-            setAllProducts(merged);
+            setAllProducts(firestoreList);
           }
 
           if (salesList.length > 0) {

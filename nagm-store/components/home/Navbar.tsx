@@ -64,18 +64,13 @@ async function fetchAndCacheNavbarProducts(): Promise<Product[]> {
       if (!snap.empty) {
         const firestoreList: Product[] = [];
         snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
-        const firestoreIds = new Set(firestoreList.map((p) => p.id));
-        const merged = [
-          ...firestoreList,
-          ...products.filter((p) => !firestoreIds.has(p.id)),
-        ];
-        cachedNavbarProducts = merged;
+        cachedNavbarProducts = firestoreList;
         if (typeof window !== "undefined") {
           try {
-            sessionStorage.setItem("negm_navbar_products", JSON.stringify(merged));
+            sessionStorage.setItem("negm_navbar_products", JSON.stringify(firestoreList));
           } catch (e) {}
         }
-        return merged;
+        return firestoreList;
       }
     } catch (err) {
       // Fallback gracefully to static catalogue

@@ -37,8 +37,7 @@ export default function BestSellers() {
         if (prodsSnap && !prodsSnap.empty) {
           const firestoreProds: Product[] = [];
           prodsSnap.forEach((d) => firestoreProds.push({ id: d.id, ...(d.data() as any) }));
-          const firestoreIds = new Set(firestoreProds.map((p) => p.id));
-          catalogue = [...firestoreProds, ...localProducts.filter((p) => !firestoreIds.has(p.id))];
+          catalogue = firestoreProds;
         }
 
         const productMap = new Map<string, Product>();

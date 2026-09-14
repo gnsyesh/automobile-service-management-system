@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import ProductCard from "@/components/common/ProductCard";
-import { products } from "@/data/products";
+import { products as localProducts } from "@/data/products";
 import { useLanguage } from "@/context/LanguageContext";
 import { TranslationKey } from "@/locales/en";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Product } from "@/types";
 
 const tabCategories = [
   { id: "all", labelKey: "featured.tabAll" as TranslationKey, fallback: "All Featured" },
@@ -19,11 +22,32 @@ const tabCategories = [
 export default function FeaturedProducts() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("all");
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>(localProducts);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProducts() {
+      try {
+        const snap = await getDocs(collection(db, "products"));
+        if (isMounted && !snap.empty) {
+          const list: Product[] = [];
+          snap.forEach((d) => list.push({ id: d.id, ...(d.data() as any) }));
+          setCatalogProducts(list);
+        }
+      } catch (err) {
+        // Keep fallback on error
+      }
+    }
+    loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProducts =
     activeTab === "all"
-      ? products.filter((p) => p.isFeatured || p.isBestSeller).slice(0, 8)
-      : products.filter((p) => p.category === activeTab).slice(0, 8);
+      ? catalogProducts.filter((p) => p.isFeatured || p.isBestSeller).slice(0, 8)
+      : catalogProducts.filter((p) => p.category === activeTab).slice(0, 8);
 
   return (
     <section className="py-20 bg-slate-100 dark:bg-[#0A0A0A] border-t border-slate-200 dark:border-[#2D2D2D] transition-colors duration-300 overflow-hidden w-full max-w-full text-left rtl:text-right">
