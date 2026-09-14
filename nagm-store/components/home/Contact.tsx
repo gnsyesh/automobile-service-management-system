@@ -79,8 +79,8 @@ Thank you.`;
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] p-4 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D4A017] text-black shrink-0">
+              <div className="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] p-4 shadow-sm hover:border-[#8B3A2E]/40 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8B3A2E] text-white shrink-0">
                   <Mail className="h-5 w-5" />
                 </div>
                 <div>

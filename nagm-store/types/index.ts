@@ -107,6 +107,7 @@ export interface Coupon {
   value: number;
   minSubtotal: number;
   description: string;
+  newCustomerOnly?: boolean;
 }
 
 export interface Address {

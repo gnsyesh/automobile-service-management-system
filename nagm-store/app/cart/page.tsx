@@ -28,16 +28,22 @@ export default function CartPage() {
   const { t, language } = useLanguage();
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     setCouponError("");
-    if (couponInput) {
-      const res = applyCoupon(couponInput);
-      if (!res.success) {
-        setCouponError(res.message);
-      } else {
-        setCouponInput("");
+    if (couponInput && !couponLoading) {
+      setCouponLoading(true);
+      try {
+        const res = await applyCoupon(couponInput);
+        if (!res.success) {
+          setCouponError(res.message);
+        } else {
+          setCouponInput("");
+        }
+      } finally {
+        setCouponLoading(false);
       }
     }
   };
@@ -188,14 +194,15 @@ export default function CartPage() {
                       type="text"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="NEGM10"
+                      placeholder="GNSYR"
                       className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-100 dark:bg-[#111111] px-3.5 py-2.5 text-xs text-slate-900 dark:text-white uppercase focus:border-[#D4A017] focus:outline-none"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2.5 rounded-xl bg-[#8B3A2E] text-xs font-bold text-white hover:bg-[#a34436] transition shrink-0"
+                      disabled={couponLoading}
+                      className="px-4 py-2.5 rounded-xl bg-[#8B3A2E] text-xs font-bold text-white hover:bg-[#a34436] transition shrink-0 disabled:opacity-50"
                     >
-                      {t("cart.apply")}
+                      {couponLoading ? "..." : t("cart.apply")}
                     </button>
                   </form>
                 )}

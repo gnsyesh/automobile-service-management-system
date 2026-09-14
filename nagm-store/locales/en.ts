@@ -18,7 +18,7 @@ export const en = {
   "announcement.freeShipping": "Free Express Delivery across Egypt on orders over 2,000 EGP",
   "announcement.guarantee": "100% Genuine OEM & Aftermarket Parts Guarantee",
   "announcement.hotline": "Auto Expert Hotline",
-  "announcement.promoCode": "Use Code NEGM10 for 10% Off",
+  "announcement.promoCode": "Use Code GNSYR for 10% Off",
 
   // Hero Section
   "hero.badge": "Egypt's #1 Luxury Automotive Spare Parts Hub",
@@ -148,6 +148,9 @@ export const en = {
   "footer.contact": "Contact & Hotline",
   "footer.copyright": "© 2026 Negm Store. All Rights Reserved. Built for Automotive Excellence in Egypt.",
   "footer.paymentMethods": "Payment Methods:",
+  "footer.developerCredit": "Designed & Developed by G Naga Sai Yeshwanth Ratna",
+  "footer.developedBy": "Designed & Developed by",
+  "footer.contactDev": "Contact Developer",
 
   // Shop Page
   "shop.catalog": "LUXURY SPARE PARTS CATALOG",
@@ -354,15 +357,10 @@ export const en = {
   "common.success": "Operation completed successfully.",
   "common.error": "An error occurred. Please try again.",
 
-  // Offers & Newsletter
+  // Offers
   "offers.specialOffer": "SPECIAL OFFER",
   "offers.copyCode": "Copy Code",
   "offers.shopNow": "Shop Now",
-  "newsletter.badge": "VIP CLUB DISCOUNTS",
-  "newsletter.title": "Subscribe For Exclusive Deals",
-  "newsletter.desc": "Receive secret discount coupons, maintenance guides, and new product notifications directly in your inbox.",
-  "newsletter.placeholder": "Enter your email address...",
-  "newsletter.subscribe": "Subscribe",
 
   // Wishlist
   "wishlist.empty": "Your Saved Wishlist is Empty",

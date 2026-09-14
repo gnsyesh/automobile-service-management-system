@@ -20,7 +20,7 @@ export const ar: Record<TranslationKey, string> = {
   "announcement.freeShipping": "توصيل سريع مجاني في جميع محافظات مصر للطلبات الأكثر من 2,000 جنيه",
   "announcement.guarantee": "ضمان 100% لقطع الغيار والزيوت الأصلية والمعتمدة",
   "announcement.hotline": "الخط الساخن لخبراء السيارات",
-  "announcement.promoCode": "استخدم كود NEGM10 للحصول على خصم 10%",
+  "announcement.promoCode": "استخدم كود GNSYR للحصول على خصم 10%",
 
   // Hero Section
   "hero.badge": "المركز الأول لقطع غيار وزيوت السيارات الفاخرة في مصر",
@@ -150,6 +150,9 @@ export const ar: Record<TranslationKey, string> = {
   "footer.contact": "التواصل والخط الساخن",
   "footer.copyright": "© 2026 نجم ستور. جميع الحقوق محفوظة. صُمم لخدمة التميز في عالم السيارات بمصر.",
   "footer.paymentMethods": "طرق الدفع المتاحة:",
+  "footer.developerCredit": "تصميم وتطوير بواسطة G Naga Sai Yeshwanth Ratna",
+  "footer.developedBy": "تصميم وتطوير بواسطة",
+  "footer.contactDev": "تواصل مع المطور",
 
   // Shop Page
   "shop.catalog": "كتالوج قطع الغيار الفاخرة",
@@ -355,15 +358,10 @@ export const ar: Record<TranslationKey, string> = {
   "common.success": "تمت العملية بنجاح.",
   "common.error": "حدث خطأ. يرجى المحاولة مرة أخرى.",
 
-  // Offers & Newsletter
+  // Offers
   "offers.specialOffer": "عرض خاص",
   "offers.copyCode": "نسخ الكوبون",
   "offers.shopNow": "تسوق الآن",
-  "newsletter.badge": "خصومات النادي المميز",
-  "newsletter.title": "اشترك للحصول على عروض حصرية",
-  "newsletter.desc": "احصل على كوبونات خصم سرية ودلائل صيانة لسيارتك وإشعارات فورية بكل جديد.",
-  "newsletter.placeholder": "أدخل بريدك الإلكتروني...",
-  "newsletter.subscribe": "اشتراك",
 
   // Wishlist
   "wishlist.empty": "قائمة المفضلة لديك فارغة",

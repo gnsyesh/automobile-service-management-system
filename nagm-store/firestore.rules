@@ -114,6 +114,20 @@ service cloud.firestore {
 
 
     // =========================================================
+    // STORE SETTINGS COLLECTION (Discounts, Global Config)
+    // =========================================================
+
+    match /storeSettings/{settingId} {
+
+      // Public settings (such as active promotional discounts) readable by everyone.
+      allow read: if true;
+
+      // Only verified active administrators can create, update, or delete store settings.
+      allow create, update, delete: if isAdmin();
+    }
+
+
+    // =========================================================
     // DENY EVERYTHING ELSE
     // =========================================================
 

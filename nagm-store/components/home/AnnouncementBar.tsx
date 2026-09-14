@@ -3,9 +3,16 @@
 import React from "react";
 import { Truck, ShieldCheck, PhoneCall } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useCart } from "@/context/CartContext";
 
 export default function AnnouncementBar() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { promotions } = useCart();
+  const gnsyrPercent = promotions?.gnsyr?.percentage ?? 10;
+  const promoText =
+    language === "ar"
+      ? `استخدم كود GNSYR للحصول على خصم ${gnsyrPercent}%`
+      : `Use Code GNSYR for ${gnsyrPercent}% Off`;
 
   return (
     <div className="bg-[#8B3A2E] text-white text-[11px] sm:text-xs font-semibold py-2 border-b border-[#D4A017]/30">
@@ -28,7 +35,7 @@ export default function AnnouncementBar() {
             <span>{t("announcement.hotline")}: <strong className="text-white">19888</strong></span>
           </div>
           <span className="text-white/40">|</span>
-          <span className="text-[#D4A017] font-bold">{t("announcement.promoCode")}</span>
+          <span className="text-[#D4A017] font-bold">{promoText}</span>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { setDoc, doc, updateDoc } from "firebase/firestore";
+import { setDoc, doc, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 import { reload } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Order } from "@/types";
@@ -61,6 +61,8 @@ export default function CheckoutPage() {
     vat,
     total,
     clearCart,
+    coupon,
+    removeCoupon,
   } = useCart();
   const { showToast } = useToast();
 
@@ -171,6 +173,31 @@ export default function CheckoutPage() {
           "error"
         );
         return;
+      }
+
+      // Re-verify new-customer coupon eligibility if ESKM is applied
+      if (coupon?.code === "ESKM") {
+        try {
+          const q = query(
+            collection(db, "orders"),
+            where("userId", "==", currentUser.uid),
+            limit(1)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            removeCoupon();
+            showToast(
+              language === "ar"
+                ? "كوبون ESKM مخصص للعملاء الجدد فقط في طلبهم الأول. تم إزالة الكوبون."
+                : "Coupon ESKM is only valid for new customers on their first order. Coupon removed.",
+              "error"
+            );
+            setLoading(false);
+            return;
+          }
+        } catch (couponCheckErr) {
+          console.warn("Could not re-verify coupon at checkout:", couponCheckErr);
+        }
       }
 
       // 4. Create Collision-Resistant Order Object

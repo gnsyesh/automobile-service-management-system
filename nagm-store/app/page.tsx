@@ -9,7 +9,6 @@ import WhyChooseUs from "@/components/home/WhyChooseUs";
 import Brands from "@/components/home/Brands";
 import Testimonials from "@/components/home/Testimonials";
 import FAQ from "@/components/home/FAQ";
-import Newsletter from "@/components/home/Newsletter";
 import Contact from "@/components/home/Contact";
 import Footer from "@/components/home/Footer";
 
@@ -27,7 +26,6 @@ export default function Home() {
       <Brands />
       <Testimonials />
       <FAQ />
-      <Newsletter />
       <Contact />
       <Footer />
     </main>

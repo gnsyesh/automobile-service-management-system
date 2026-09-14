@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Phone, Mail, MapPin, ShieldCheck } from "lucide-react";
+import { Phone, Mail, MapPin, ShieldCheck, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Footer() {
@@ -107,6 +107,29 @@ export default function Footer() {
               <span>Vodafone Cash</span>
             </div>
           </div>
+        </div>
+
+        {/* Dedicated Developer Credit & Contact */}
+        <div className="mt-8 pt-6 border-t border-slate-800 dark:border-[#1F1F1F] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col text-center sm:text-left rtl:sm:text-right">
+            <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400 dark:text-gray-400">
+              {t("footer.developedBy")}
+            </span>
+            <span className="text-sm sm:text-[15px] font-bold text-slate-100 dark:text-white hover:text-[#D4A017] dark:hover:text-[#D4A017] transition-colors tracking-tight mt-0.5 cursor-default">
+              G Naga Sai Yeshwanth Ratna
+            </span>
+          </div>
+
+          <a
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=gnsyesh123@gmail.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-700/80 hover:border-[#D4A017]/60 dark:border-[#2A2A2A] dark:hover:border-[#D4A017]/60 bg-slate-800/60 hover:bg-slate-800 dark:bg-[#141414] dark:hover:bg-[#1C1C1C] text-xs font-semibold text-slate-200 dark:text-gray-300 hover:text-[#D4A017] dark:hover:text-[#D4A017] transition-all duration-200 shadow-sm shrink-0"
+          >
+            <Mail className="h-3.5 w-3.5 text-[#D4A017] shrink-0" />
+            <span>{t("footer.contactDev")}</span>
+            <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#D4A017] group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 rtl:rotate-180 transition-all shrink-0" />
+          </a>
         </div>
 
       </div>

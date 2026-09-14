@@ -2,9 +2,16 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { CartItem, Product, Coupon } from "@/types";
-import { coupons } from "@/data/coupons";
 import { useToast } from "./ToastContext";
 import { useAuth } from "./AuthContext";
+import { db } from "@/lib/firebase";
+import { collection, query, where, limit, getDocs } from "firebase/firestore";
+import {
+  subscribePromotions,
+  DEFAULT_PROMOTIONS,
+  PromotionsConfig,
+  getCouponsWithPromotions,
+} from "@/lib/promotions";
 
 interface CartContextType {
   cart: CartItem[];
@@ -13,7 +20,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   coupon: Coupon | null;
-  applyCoupon: (code: string) => { success: boolean; message: string };
+  applyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
   removeCoupon: () => void;
   subtotal: number;
   discountAmount: number;
@@ -21,6 +28,7 @@ interface CartContextType {
   vat: number;
   total: number;
   itemCount: number;
+  promotions: PromotionsConfig;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -31,8 +39,84 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [promotions, setPromotions] = useState<PromotionsConfig>(DEFAULT_PROMOTIONS);
   const isLoadedForUidRef = useRef<string | null>(null);
   const { showToast } = useToast();
+
+  // Memory cache of order history status by UID to avoid duplicate reads during a session
+  const orderHistoryCacheRef = useRef<Map<string, boolean>>(new Map());
+
+  // Check whether a customer has placed any previous order in Firestore orders collection
+  const checkUserHasOrders = useCallback(
+    async (uid: string): Promise<{ hasOrders: boolean; error?: string }> => {
+      if (orderHistoryCacheRef.current.has(uid)) {
+        return { hasOrders: orderHistoryCacheRef.current.get(uid)! };
+      }
+
+      try {
+        const q = query(
+          collection(db, "orders"),
+          where("userId", "==", uid),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        const hasOrders = !snap.empty;
+        orderHistoryCacheRef.current.set(uid, hasOrders);
+        return { hasOrders };
+      } catch (err: any) {
+        console.error("Failed to query customer orders:", err);
+        return {
+          hasOrders: false,
+          error: err?.message || "Failed to verify customer order history",
+        };
+      }
+    },
+    []
+  );
+
+  // Subscribe to real-time promotional discounts from Firestore
+  useEffect(() => {
+    const unsubscribe = subscribePromotions((latestPromotions) => {
+      setPromotions(latestPromotions);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Compute active coupon definitions merged with current promotional percentages
+  const activeCoupons = useMemo(() => {
+    return getCouponsWithPromotions(promotions);
+  }, [promotions]);
+
+  // Synchronize active applied coupon whenever promotions or user state update
+  useEffect(() => {
+    if (!coupon) return;
+    const matched = activeCoupons.find((c) => c.code === coupon.code);
+    if (!matched) {
+      setCoupon(null);
+      return;
+    }
+
+    // If ESKM (new customer coupon) is active, ensure user is still logged in and has zero orders
+    if (coupon.code === "ESKM" || matched.newCustomerOnly) {
+      if (!user) {
+        setCoupon(null);
+        return;
+      }
+      checkUserHasOrders(user.uid).then(({ hasOrders }) => {
+        if (hasOrders) {
+          setCoupon(null);
+        }
+      });
+    }
+
+    if (
+      matched.value !== coupon.value ||
+      matched.minSubtotal !== coupon.minSubtotal ||
+      matched.description !== coupon.description
+    ) {
+      setCoupon(matched);
+    }
+  }, [activeCoupons, checkUserHasOrders, coupon, user]);
 
   // Synchronize cart with current authenticated user (or guest)
   useEffect(() => {
@@ -140,6 +224,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = useCallback(() => {
     setCart([]);
     setCoupon(null);
+    if (activeUid !== "guest") {
+      orderHistoryCacheRef.current.set(activeUid, true);
+    }
     try {
       localStorage.removeItem(`negm_cart_${activeUid}`);
       localStorage.removeItem(`negm_coupon_${activeUid}`);
@@ -149,15 +236,47 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [activeUid]);
 
   const applyCoupon = useCallback(
-    (code: string) => {
+    async (code: string): Promise<{ success: boolean; message: string }> => {
       const cleanCode = code.trim().toUpperCase();
-      const foundCoupon = coupons.find((c) => c.code === cleanCode);
+      const foundCoupon = activeCoupons.find((c) => c.code === cleanCode);
       
       if (!foundCoupon) {
-        return { success: false, message: "Invalid coupon code. Try NEGM10 or WELCOME15" };
+        return { success: false, message: "Invalid coupon code. Try GNSYR or ESKM" };
       }
 
       const currentSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+      // ESKM: Exclusive New Customer Coupon
+      if (foundCoupon.code === "ESKM" || foundCoupon.newCustomerOnly) {
+        if (authLoading) {
+          return {
+            success: false,
+            message: "Verifying customer account, please try again in a moment.",
+          };
+        }
+
+        if (!user) {
+          return {
+            success: false,
+            message: "Coupon ESKM is exclusively for new customers. Please log in or sign up to verify your first-order eligibility.",
+          };
+        }
+
+        const { hasOrders, error } = await checkUserHasOrders(user.uid);
+        if (error) {
+          return {
+            success: false,
+            message: "Unable to verify first-order eligibility at this time. Please try again.",
+          };
+        }
+
+        if (hasOrders) {
+          return {
+            success: false,
+            message: "Coupon ESKM is only valid for new customers on their first order.",
+          };
+        }
+      }
 
       if (currentSubtotal < foundCoupon.minSubtotal) {
         return { 
@@ -170,7 +289,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       showToast(`Coupon "${foundCoupon.code}" applied successfully!`, "success");
       return { success: true, message: `Coupon applied: ${foundCoupon.description}` };
     },
-    [cart, showToast]
+    [activeCoupons, authLoading, cart, checkUserHasOrders, showToast, user]
   );
 
   const removeCoupon = useCallback(() => {
@@ -185,6 +304,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const discountAmount = useMemo(() => {
     if (!coupon) return 0;
+    if (coupon.minSubtotal && subtotal < coupon.minSubtotal) return 0;
     if (coupon.discountType === "percentage") {
       return (subtotal * coupon.value) / 100;
     }
@@ -221,6 +341,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       vat,
       total,
       itemCount,
+      promotions,
     }),
     [
       cart,
@@ -237,6 +358,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       vat,
       total,
       itemCount,
+      promotions,
     ]
   );
 

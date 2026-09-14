@@ -2,18 +2,19 @@ import { Coupon } from "@/types";
 
 export const coupons: Coupon[] = [
   {
-    code: "NEGM10",
+    code: "GNSYR",
     discountType: "percentage",
     value: 10,
     minSubtotal: 0,
     description: "10% discount on your entire order"
   },
   {
-    code: "WELCOME15",
+    code: "ESKM",
     discountType: "percentage",
     value: 15,
     minSubtotal: 1000,
-    description: "15% off for orders over 1000 EGP"
+    description: "15% off for orders over 1000 EGP",
+    newCustomerOnly: true
   },
   {
     code: "EGYPT50",

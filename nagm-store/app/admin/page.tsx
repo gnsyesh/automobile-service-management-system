@@ -29,12 +29,23 @@ import {
   Sparkles,
   Hash,
   ArrowUpRight,
+  Tag,
+  Save,
 } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Order, Product, DateFilterPreset, UserProfile } from "@/types";
 import { products as localProducts } from "@/data/products";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import {
+  subscribePromotions,
+  savePromotions,
+  DEFAULT_PROMOTIONS,
+  PromotionsConfig,
+  validatePercentage,
+} from "@/lib/promotions";
 import {
   getDateRangeForPreset,
   filterOrdersByRange,
@@ -72,6 +83,75 @@ export default function AdminDashboardPage() {
   const [compareEnabled, setCompareEnabled] = useState<boolean>(true);
   const [topLimit, setTopLimit] = useState<number>(5);
   const [chartYear, setChartYear] = useState<number>(new Date().getFullYear());
+
+  const { user } = useAuth();
+  const { showToast } = useToast();
+
+  // Promotions & Discounts State
+  const [promotions, setPromotions] = useState<PromotionsConfig>(DEFAULT_PROMOTIONS);
+  const [gnsyrInput, setGnsyrInput] = useState<string>("10");
+  const [eskmInput, setEskmInput] = useState<string>("15");
+  const [savingPromotions, setSavingPromotions] = useState(false);
+  const [promotionsError, setPromotionsError] = useState<string | null>(null);
+  const [promotionsSuccess, setPromotionsSuccess] = useState<string | null>(null);
+
+  // Subscribe to real-time promotions config
+  useEffect(() => {
+    const unsubscribe = subscribePromotions((config) => {
+      setPromotions(config);
+      setGnsyrInput(String(config.gnsyr.percentage));
+      setEskmInput(String(config.eskm.percentage));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSavePromotions = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPromotionsError(null);
+    setPromotionsSuccess(null);
+
+    const val1 = validatePercentage(gnsyrInput);
+    if (!val1.valid) {
+      setPromotionsError(`GNSYR: ${val1.error}`);
+      return;
+    }
+
+    const val2 = validatePercentage(eskmInput);
+    if (!val2.valid) {
+      setPromotionsError(`ESKM: ${val2.error}`);
+      return;
+    }
+
+    setSavingPromotions(true);
+    try {
+      await savePromotions(
+        {
+          gnsyrPercentage: Number(gnsyrInput),
+          eskmPercentage: Number(eskmInput),
+        },
+        user?.uid || "admin"
+      );
+
+      const msg =
+        language === "ar"
+          ? "تم تحديث نسب الخصومات الترويجية بنجاح!"
+          : "Promotional discount percentages updated successfully!";
+      setPromotionsSuccess(msg);
+      showToast(msg, "success");
+      setTimeout(() => setPromotionsSuccess(null), 4000);
+    } catch (err: any) {
+      console.error("Failed to save promotions:", err);
+      const errMsg =
+        err?.message ||
+        (language === "ar"
+          ? "فشل حفظ التعديلات. يرجى المحاولة مرة أخرى."
+          : "Failed to save discount percentages. Please try again.");
+      setPromotionsError(errMsg);
+      showToast(errMsg, "error");
+    } finally {
+      setSavingPromotions(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -1243,7 +1323,165 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* 9. Recent Customer Orders Section */}
+      {/* 9. Promotions & Discount Codes Management */}
+      <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-4">
+          <div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Tag className="h-5 w-5 text-[#D4A017]" />
+              <span>{language === "ar" ? "العروض الترويجية وأكواد الخصم" : "Promotions & Discount Codes"}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+              {language === "ar"
+                ? "تعديل نسب الخصم الترويجية النشطة للمتجر؛ يتم تطبيق التعديلات فوراً على البطاقات وعند حساب الدفع"
+                : "Manage live promotional discount percentages; updates apply instantly to homepage cards and checkout calculations"}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-gray-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{language === "ar" ? "متزامن في الوقت الفعلي" : "Live Real-Time Sync"}</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSavePromotions} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Promotion 1: GNSYR */}
+            <div className="rounded-2xl border border-slate-200 dark:border-[#252525] bg-slate-50/70 dark:bg-[#1A1A1A] p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-black text-sm text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-1 rounded-lg border border-[#D4A017]/30">
+                    GNSYR
+                  </span>
+                  <span className="text-xs font-extrabold uppercase text-slate-700 dark:text-gray-300">
+                    {language === "ar" ? "عرض خاص" : "Special Offer"}
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400 bg-white dark:bg-[#111111] px-2.5 py-1 rounded-full border border-slate-200 dark:border-[#2D2D2D]">
+                  {language === "ar" ? "كامل الطلب (0+ جنيه)" : "Entire Order (Min 0 EGP)"}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-200">
+                  {language === "ar" ? "نسبة الخصم المئوية (%)" : "Discount Percentage (%)"}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={gnsyrInput}
+                    onChange={(e) => setGnsyrInput(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#111111] px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none transition pr-10 rtl:pr-4 rtl:pl-10"
+                  />
+                  <div className="absolute inset-y-0 right-0 rtl:right-auto rtl:left-0 flex items-center pr-3.5 rtl:pr-0 rtl:pl-3.5 pointer-events-none text-slate-400 font-bold text-sm">
+                    %
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed">
+                {language === "ar"
+                  ? "يظهر على بطاقة العرض الأولى وشريط الإعلانات العلوي، ويخصم النسبة المحددة من إجمالي السلة."
+                  : "Appears on Homepage Offer Card #1 & Announcement Bar; deducts this percentage from order subtotal."}
+              </p>
+            </div>
+
+            {/* Promotion 2: ESKM */}
+            <div className="rounded-2xl border border-slate-200 dark:border-[#252525] bg-slate-50/70 dark:bg-[#1A1A1A] p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-black text-sm text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-1 rounded-lg border border-[#D4A017]/30">
+                    ESKM
+                  </span>
+                  <span className="text-xs font-extrabold uppercase text-slate-700 dark:text-gray-300">
+                    {language === "ar" ? "عميل جديد" : "New Customer"}
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-1 rounded-full border border-[#D4A017]/20">
+                  {language === "ar" ? "للطلبات فوق 1000 جنيه" : "Orders > 1000 EGP"}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-200">
+                  {language === "ar" ? "نسبة الخصم المئوية (%)" : "Discount Percentage (%)"}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={eskmInput}
+                    onChange={(e) => setEskmInput(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#111111] px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:border-[#D4A017] focus:outline-none transition pr-10 rtl:pr-4 rtl:pl-10"
+                  />
+                  <div className="absolute inset-y-0 right-0 rtl:right-auto rtl:left-0 flex items-center pr-3.5 rtl:pr-0 rtl:pl-3.5 pointer-events-none text-slate-400 font-bold text-sm">
+                    %
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-gray-400 leading-relaxed">
+                {language === "ar"
+                  ? "يظهر على بطاقة العرض الثانية للعملاء الجدد، ويتطلب حداً أدنى 1000 جنيه لتطبيقه."
+                  : "Appears on Homepage Offer Card #2; requires minimum 1000 EGP subtotal to apply at checkout."}
+              </p>
+            </div>
+          </div>
+
+          {/* Feedback & Actions */}
+          {promotionsError && (
+            <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-xs font-bold text-red-600 dark:text-red-400">
+              {promotionsError}
+            </div>
+          )}
+
+          {promotionsSuccess && (
+            <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              {promotionsSuccess}
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-[#222222]">
+            <div className="text-[11px] text-slate-500 dark:text-gray-400">
+              {promotions.gnsyr.updatedAt ? (
+                <span>
+                  {language === "ar" ? "آخر تحديث محفوظ:" : "Last saved:"}{" "}
+                  {new Date(promotions.gnsyr.updatedAt).toLocaleString(language === "ar" ? "ar-EG" : "en-US")}
+                </span>
+              ) : (
+                <span>{language === "ar" ? "النسب الافتراضية نشطة حالياً" : "Currently using default percentages"}</span>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={savingPromotions}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D4A017] hover:bg-yellow-400 text-black px-6 py-2.5 text-xs font-black transition shadow-md disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            >
+              {savingPromotions ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <span>{language === "ar" ? "جاري الحفظ..." : "Saving..."}</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>{language === "ar" ? "حفظ وتطبيق التعديلات" : "Save & Apply Changes"}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* 10. Recent Customer Orders Section */}
       <div className="rounded-3xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#151515] p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#2D2D2D] pb-4">
           <div>
