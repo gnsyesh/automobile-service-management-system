@@ -213,3 +213,23 @@ export interface Order {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface ProductSales {
+  productId: string;
+  unitsSold: number;
+  revenue: number;
+  updatedAt: string;
+}
+
+export interface ProcessedSalesOrder {
+  orderId: string;
+  processedAt: string;
+  status: OrderStatus;
+  cancelled?: boolean;
+  cancelledAt?: string;
+  items: {
+    productId: string;
+    quantity: number;
+    price: number;
+  }[];
+}

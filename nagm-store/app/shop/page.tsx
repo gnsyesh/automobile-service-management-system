@@ -16,6 +16,7 @@ import { Search, Filter, Grid, List, SlidersHorizontal, RefreshCw, Car } from "l
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Product } from "@/types";
+import { fetchTopSellingSales } from "@/lib/sales";
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -59,27 +60,42 @@ function ShopContent() {
 
   // Live Products State (Merged with Firestore catalogue)
   const [allProducts, setAllProducts] = useState<Product[]>(products);
+  const [salesMap, setSalesMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let isMounted = true;
-    const fetchLiveProducts = async () => {
+    const fetchLiveProductsAndSales = async () => {
       try {
-        const snap = await getDocs(collection(db, "products"));
-        if (!snap.empty && isMounted) {
-          const firestoreList: Product[] = [];
-          snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
-          const firestoreIds = new Set(firestoreList.map((p) => p.id));
-          const merged = [
-            ...firestoreList,
-            ...products.filter((p) => !firestoreIds.has(p.id)),
-          ];
-          setAllProducts(merged);
+        const [snap, salesList] = await Promise.all([
+          getDocs(collection(db, "products")).catch(() => null),
+          fetchTopSellingSales(100).catch(() => []),
+        ]);
+
+        if (isMounted) {
+          if (snap && !snap.empty) {
+            const firestoreList: Product[] = [];
+            snap.forEach((d) => firestoreList.push({ id: d.id, ...(d.data() as any) }));
+            const firestoreIds = new Set(firestoreList.map((p) => p.id));
+            const merged = [
+              ...firestoreList,
+              ...products.filter((p) => !firestoreIds.has(p.id)),
+            ];
+            setAllProducts(merged);
+          }
+
+          if (salesList.length > 0) {
+            const map: Record<string, number> = {};
+            salesList.forEach((s) => {
+              map[s.productId] = s.unitsSold;
+            });
+            setSalesMap(map);
+          }
         }
       } catch (err) {
         // Fallback gracefully to static catalog if offline or permissions
       }
     };
-    fetchLiveProducts();
+    fetchLiveProductsAndSales();
     return () => {
       isMounted = false;
     };
@@ -148,10 +164,17 @@ function ShopContent() {
     } else if (sortOption === "latest") {
       return copy.sort((a, b) => b.id.localeCompare(a.id));
     } else {
-      // Popular / Default
-      return copy.sort((a, b) => (b.reviewsCount || 0) - (a.reviewsCount || 0));
+      // Popular / Default: Real sales count first, falling back to reviewsCount
+      return copy.sort((a, b) => {
+        const salesA = salesMap[a.id] || 0;
+        const salesB = salesMap[b.id] || 0;
+        if (salesB !== salesA) {
+          return salesB - salesA;
+        }
+        return (b.reviewsCount || 0) - (a.reviewsCount || 0);
+      });
     }
-  }, [filteredProducts, sortOption]);
+  }, [filteredProducts, sortOption, salesMap]);
 
   // Pagination Slice
   const totalPages = Math.max(1, Math.ceil(sortedProducts.length / itemsPerPage));

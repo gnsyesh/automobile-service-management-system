@@ -62,6 +62,7 @@ import {
   getCustomerInsights,
   CustomerInsights,
 } from "@/lib/analytics";
+import { syncProductSalesFromOrders } from "@/lib/sales";
 
 export default function AdminDashboardPage() {
   const { t, language } = useLanguage();
@@ -196,6 +197,13 @@ export default function AdminDashboardPage() {
       }
 
       setLastUpdated(new Date());
+
+      // 4. Synchronize / reconcile productSales for homepage Best Sellers
+      if (fetchedOrders.length > 0) {
+        syncProductSalesFromOrders(fetchedOrders).catch((syncErr) => {
+          console.warn("Could not sync product sales in admin:", syncErr);
+        });
+      }
     } catch (e) {
       console.error("Error fetching admin dashboard data:", e);
     } finally {

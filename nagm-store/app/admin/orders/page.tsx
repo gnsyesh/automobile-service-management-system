@@ -19,6 +19,7 @@ import {
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Order } from "@/types";
+import { adjustSalesOnOrderCancellation } from "@/lib/sales";
 import { useLanguage } from "@/context/LanguageContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -52,11 +53,22 @@ export default function AdminOrdersPage() {
 
   const handleUpdateStatus = async (orderId: string, newStatus: Order["status"]) => {
     try {
+      const targetOrder = orders.find((o) => o.id === orderId);
+      const previousStatus = targetOrder ? (targetOrder.status || targetOrder.orderStatus || "Processing") : "Processing";
+
       await updateDoc(doc(db, "orders", orderId), {
         status: newStatus,
         orderStatus: newStatus,
         updatedAt: new Date().toISOString(),
       });
+
+      if (targetOrder) {
+        try {
+          await adjustSalesOnOrderCancellation(targetOrder, previousStatus, newStatus);
+        } catch (salesErr) {
+          console.warn("Could not adjust sales for order cancellation:", salesErr);
+        }
+      }
 
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, orderStatus: newStatus } : o))

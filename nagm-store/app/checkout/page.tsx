@@ -8,6 +8,7 @@ import { setDoc, doc, updateDoc, collection, query, where, limit, getDocs } from
 import { reload } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Order } from "@/types";
+import { recordOrderSales } from "@/lib/sales";
 
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
@@ -248,6 +249,13 @@ export default function CheckoutPage() {
         await setDoc(doc(db, "orders", orderId), newOrder);
       } catch (dbErr) {
         console.warn("Could not save order to Firestore directly (offline or permissions):", dbErr);
+      }
+
+      // 5.5 Update aggregated sales data for productSales/{productId} (idempotent)
+      try {
+        await recordOrderSales(newOrder);
+      } catch (salesErr) {
+        console.warn("Could not record sales aggregation:", salesErr);
       }
 
       // 6. Update user's shipping address in Firestore `users/{uid}` for seamless reordering

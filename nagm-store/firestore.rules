@@ -128,6 +128,42 @@ service cloud.firestore {
 
 
     // =========================================================
+    // PRODUCT SALES COLLECTION (Public Aggregated Sales Stats)
+    // =========================================================
+
+    match /productSales/{productId} {
+
+      // Public aggregated sales metrics readable by everyone (including guests).
+      // Contains strictly non-sensitive aggregated product stats: productId, unitsSold, revenue, updatedAt.
+      allow read: if true;
+
+      // Authenticated customers increment sales counters when placing orders;
+      // Admins can sync and reconcile sales aggregates.
+      allow create, update: if isAuthenticated();
+
+      // Only administrators can delete sales aggregations.
+      allow delete: if isAdmin();
+    }
+
+
+    // =========================================================
+    // PROCESSED SALES ORDERS (Idempotency Tracking)
+    // =========================================================
+
+    match /processedSalesOrders/{orderId} {
+
+      // Authenticated users and admins can read/check processed status to prevent double-counting.
+      allow read: if isAuthenticated();
+
+      // Authenticated customers record order processing during checkout; admins can update upon status change.
+      allow create, update: if isAuthenticated();
+
+      // Only administrators can delete idempotency records.
+      allow delete: if isAdmin();
+    }
+
+
+    // =========================================================
     // DENY EVERYTHING ELSE
     // =========================================================
 
