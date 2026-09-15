@@ -237,6 +237,7 @@ export default function CheckoutPage() {
           apartment: formData.notes,
         },
         paymentMethod,
+        paymentStatus: paymentMethod === "cod" ? "paid" : "pending",
         status: "Processing",
         orderStatus: "Processing",
         estimatedDelivery: language === "ar" ? "خلال 2 إلى 4 أيام عمل" : "3-5 Business Days",

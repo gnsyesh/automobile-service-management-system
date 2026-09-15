@@ -154,6 +154,7 @@ export interface OrderCustomerDetails {
 }
 
 export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export type DateFilterPreset =
   | "today"
@@ -206,6 +207,9 @@ export interface Order {
   total: number;
   shippingAddress: Address;
   paymentMethod: 'cod' | 'card' | 'wallet';
+  paymentStatus?: PaymentStatus;
+  paymentTransactionId?: string;
+  paymentReference?: string;
   status: OrderStatus;
   orderStatus?: OrderStatus;
   estimatedDelivery?: string;

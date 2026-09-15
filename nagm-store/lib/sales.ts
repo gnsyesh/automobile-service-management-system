@@ -22,9 +22,21 @@ import { Order, OrderStatus, ProductSales, ProcessedSalesOrder } from "@/types";
  */
 export function isQualifyingSalesOrder(order: Order): boolean {
   if (!order) return false;
-  const s = (order.status || order.orderStatus || "").toLowerCase();
-  if (s === "cancelled") return false;
-  return (order.total || 0) > 0;
+
+  const orderStatus = (order.status || order.orderStatus || "").toLowerCase();
+
+  if (orderStatus === "cancelled") return false;
+  if ((order.total || 0) <= 0) return false;
+
+  // COD orders are considered sales when the order is placed.
+  if (order.paymentMethod === "cod") return true;
+
+  // Card/wallet orders count only after successful payment confirmation.
+  if (order.paymentMethod === "card" || order.paymentMethod === "wallet") {
+    return order.paymentStatus === "paid";
+  }
+
+  return false;
 }
 
 /**
