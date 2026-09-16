@@ -214,6 +214,11 @@ export interface Order {
   orderStatus?: OrderStatus;
   estimatedDelivery?: string;
   trackingNumber?: string;
+  couponCode?: string | null;
+  notes?: string;
+  stockDecremented?: boolean;
+  salesRecorded?: boolean;
+  expiresAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }

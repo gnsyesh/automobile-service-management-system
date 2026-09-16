@@ -1,136 +1,139 @@
 import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
+import { verifyFirebaseToken } from "@/lib/server-auth";
 
 const PAYMOB_INTENTION_URL = "https://accept.paymob.com/v1/intention/";
+const DEFAULT_PAYMOB_CHECKOUT_BASE_URL = "https://accept.paymob.com/unifiedcheckout/";
 
 export async function POST(request: Request) {
   try {
+    // 1. Verify authenticated user
+    const decodedToken = await verifyFirebaseToken(request);
+    const uid = decodedToken.uid;
+
+    // 2. Parse request body
     const body = await request.json();
-
-    const {
-      amount,
-      currency = "EGP",
-      orderId,
-      customer,
-    } = body;
-
-    // Basic validation
-    if (!amount || typeof amount !== "number" || amount <= 0) {
-      return NextResponse.json(
-        { error: "Invalid payment amount" },
-        { status: 400 }
-      );
-    }
-
-    if (currency !== "EGP") {
-      return NextResponse.json(
-        { error: "Only EGP payments are currently supported" },
-        { status: 400 }
-      );
-    }
+    const { orderId, paymentMethod = "card" } = body;
 
     if (!orderId || typeof orderId !== "string") {
       return NextResponse.json(
-        { error: "Missing order ID" },
+        { error: "Missing or invalid order ID", code: "INVALID_ORDER_ID" },
         { status: 400 }
       );
     }
 
-    if (!customer?.email || !customer?.phone) {
+    // 3. Read the order from Firestore to verify ownership and trusted pricing
+    const orderDoc = await adminDb.collection("orders").doc(orderId).get();
+    if (!orderDoc.exists) {
       return NextResponse.json(
-        { error: "Customer email and phone are required" },
+        { error: "Order not found", code: "ORDER_NOT_FOUND" },
+        { status: 404 }
+      );
+    }
+
+    const orderData = orderDoc.data();
+    if (!orderData) {
+      return NextResponse.json(
+        { error: "Order data unavailable", code: "ORDER_DATA_UNAVAILABLE" },
+        { status: 500 }
+      );
+    }
+
+    // Ensure the order belongs to the authenticated caller
+    if (orderData.userId !== uid) {
+      return NextResponse.json(
+        { error: "Unauthorized access to this order", code: "FORBIDDEN" },
+        { status: 403 }
+      );
+    }
+
+    // Check payment status
+    if (orderData.paymentStatus === "paid") {
+      return NextResponse.json(
+        { error: "Order is already paid", code: "ORDER_ALREADY_PAID" },
         { status: 400 }
       );
     }
 
+    // 4. Validate server-only Paymob credentials
     const secretKey = process.env.PAYMOB_SECRET_KEY;
-    const integrationId = process.env.PAYMOB_CARD_INTEGRATION_ID;
+    const publicKey = process.env.PAYMOB_PUBLIC_KEY;
+    const isWallet = paymentMethod === "wallet";
+    const integrationId = isWallet
+      ? process.env.PAYMOB_WALLET_INTEGRATION_ID
+      : process.env.PAYMOB_CARD_INTEGRATION_ID;
 
-    if (!secretKey || !integrationId) {
+    // If credentials are not configured yet, return controlled 503
+    if (!secretKey || !publicKey || !integrationId) {
       return NextResponse.json(
-        { error: "Paymob is not configured yet" },
+        {
+          error:
+            "Paymob online payment is not yet configured on this server. Please select Cash on Delivery.",
+          code: "PAYMOB_NOT_CONFIGURED",
+        },
         { status: 503 }
       );
     }
 
     const integrationIdNumber = Number(integrationId);
-
-    if (!Number.isInteger(integrationIdNumber)) {
+    if (!Number.isInteger(integrationIdNumber) || integrationIdNumber <= 0) {
       return NextResponse.json(
-        { error: "Invalid Paymob integration ID configuration" },
+        {
+          error: "Invalid Paymob integration configuration",
+          code: "INVALID_INTEGRATION_ID",
+        },
         { status: 500 }
       );
     }
 
-    // Paymob expects the amount in the smallest currency unit.
-    // EGP 100.00 -> 10000 piasters.
-    const amountInPiasters = Math.round(amount * 100);
+    // 5. Build Paymob Intention payload using TRUSTED server order data
+    // Paymob expects amount in piasters (100 EGP = 10000 piasters)
+    const amountInPiasters = Math.round(Number(orderData.total) * 100);
 
-    const firstName =
-      typeof customer.firstName === "string"
-        ? customer.firstName
-        : "Customer";
+    const shippingAddr = orderData.shippingAddress || {};
+    const customerDetails = orderData.customerDetails || {};
 
-    const lastName =
-      typeof customer.lastName === "string"
-        ? customer.lastName
-        : "Customer";
+    const fullNameParts = (shippingAddr.fullName || customerDetails.fullName || "Customer").trim().split(" ");
+    const firstName = fullNameParts[0] || "Customer";
+    const lastName = fullNameParts.slice(1).join(" ") || "Customer";
+    const email = customerDetails.email || orderData.userEmail || "customer@negmstore.com";
+    const phone = shippingAddr.phone || customerDetails.phone || "01000000000";
 
-    const city =
-      typeof customer.city === "string" && customer.city.trim()
-        ? customer.city
-        : "Cairo";
-
-    const state =
-      typeof customer.state === "string" && customer.state.trim()
-        ? customer.state
-        : city;
-
-    const street =
-      typeof customer.street === "string" && customer.street.trim()
-        ? customer.street
-        : "N/A";
-
-    const building =
-      typeof customer.building === "string" && customer.building.trim()
-        ? customer.building
-        : "N/A";
+    const hostHeader = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+    const protoHeader = request.headers.get("x-forwarded-proto") || "http";
+    const origin = `${protoHeader}://${hostHeader}`;
 
     const intentionPayload = {
       amount: amountInPiasters,
       currency: "EGP",
-
       payment_methods: [integrationIdNumber],
-
       items: [
         {
           name: `Negm Store Order ${orderId}`,
           amount: amountInPiasters,
-          description: `Payment for Negm Store order ${orderId}`,
+          description: `Auto parts order ${orderId}`,
           quantity: 1,
         },
       ],
-
       billing_data: {
-        apartment: "N/A",
         first_name: firstName,
         last_name: lastName,
-        street,
-        building,
-        phone_number: customer.phone,
-        city,
+        phone_number: phone,
+        email,
         country: "EG",
-        email: customer.email,
+        state: shippingAddr.governorate || "Cairo",
+        city: shippingAddr.city || "Cairo",
+        street: shippingAddr.street || "N/A",
+        building: shippingAddr.building || "N/A",
+        apartment: shippingAddr.apartment || "N/A",
         floor: "N/A",
-        state,
       },
-
       special_reference: orderId,
-
-      // We will add the real production callback URL later.
-      // notification_url: "...",
-      // redirection_url: "...",
+      notification_url: `${origin}/api/payments/paymob/callback`,
+      redirection_url: `${origin}/api/payments/paymob/callback`,
     };
 
+    // 6. Request Payment Intention from Paymob
     const paymobResponse = await fetch(PAYMOB_INTENTION_URL, {
       method: "POST",
       headers: {
@@ -144,31 +147,41 @@ export async function POST(request: Request) {
 
     if (!paymobResponse.ok) {
       console.error("Paymob intention creation failed:", paymobData);
-
       return NextResponse.json(
         {
           error: "Paymob payment initialization failed",
-          details:
-            typeof paymobData === "object"
-              ? paymobData
-              : String(paymobData),
+          code: "PAYMOB_INTENTION_FAILED",
         },
         { status: paymobResponse.status }
       );
     }
 
+    const clientSecret = paymobData.client_secret;
+    const checkoutBaseUrl =
+      process.env.PAYMOB_CHECKOUT_BASE_URL || DEFAULT_PAYMOB_CHECKOUT_BASE_URL;
+
+    const checkoutUrl = `${checkoutBaseUrl}?publicKey=${publicKey}&clientSecret=${clientSecret}`;
+
     return NextResponse.json({
       success: true,
       intentionId: paymobData.id,
       paymobOrderId: paymobData.intention_order_id,
-      clientSecret: paymobData.client_secret,
+      clientSecret,
+      checkoutUrl,
       status: paymobData.status,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Paymob create payment error:", error);
 
+    if (error?.message === "Missing authorization token") {
+      return NextResponse.json(
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Unable to initialize payment" },
+      { error: "Unable to initialize payment", code: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

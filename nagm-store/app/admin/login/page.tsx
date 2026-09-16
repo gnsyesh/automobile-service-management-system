@@ -196,13 +196,14 @@ export default function AdminLoginPage() {
         {/* Admin Header */}
         <div className="text-center mb-6 sm:mb-8">
           <Link href="/" className="inline-block mb-3 sm:mb-4">
-            <div className="relative h-12 sm:h-14 w-44 sm:w-52 mx-auto">
+            <div className="relative h-16 w-16 sm:h-20 sm:w-20 mx-auto">
               <Image
                 src="/images/negm-store-logo.png"
                 alt="Negm Store"
-                fill
+                width={80}
+                height={80}
                 priority
-                className="object-contain"
+                className="object-contain w-full h-full"
               />
             </div>
           </Link>

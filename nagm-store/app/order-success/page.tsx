@@ -41,10 +41,26 @@ export default function OrderSuccessPage() {
       console.error(e);
     }
 
-    // Fallback: Query Firestore for user's latest order
+    // Fallback: Check for ?orderId= parameter or query user's latest order from Firestore
     let isMounted = true;
     const fetchLatestFirestoreOrder = async () => {
       try {
+        if (typeof window !== "undefined") {
+          const searchParams = new URLSearchParams(window.location.search);
+          const queryOrderId = searchParams.get("orderId");
+          if (queryOrderId) {
+            const { doc, getDoc } = await import("firebase/firestore");
+            const orderSnap = await getDoc(doc(db, "orders", queryOrderId));
+            if (orderSnap.exists() && isMounted) {
+              const orderData = { id: orderSnap.id, ...(orderSnap.data() as any) };
+              if (orderData.userId === user.uid) {
+                setOrder(orderData);
+                return;
+              }
+            }
+          }
+        }
+
         const q = query(
           collection(db, "orders"),
           where("userId", "==", user.uid)
@@ -59,7 +75,7 @@ export default function OrderSuccessPage() {
           }
         }
       } catch (err) {
-        console.error("Error fetching latest order from Firestore:", err);
+        console.error("Error fetching order from Firestore:", err);
       }
     };
     fetchLatestFirestoreOrder();

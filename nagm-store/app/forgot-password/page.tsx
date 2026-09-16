@@ -107,13 +107,14 @@ export default function ForgotPasswordPage() {
             href="/"
             className="inline-flex flex-col items-center gap-2 mb-4 group"
           >
-            <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-white p-1 border border-[#D4A017]/30 shadow-md">
+            <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-white dark:bg-[#1B1B1B] p-1 border border-[#D4A017]/30 shadow-md">
               <Image
                 src="/images/negm-store-logo.png"
                 alt="Negm Store"
-                fill
+                width={64}
+                height={64}
                 priority
-                className="object-contain"
+                className="object-contain w-full h-full"
               />
             </div>
 

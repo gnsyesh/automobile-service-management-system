@@ -4,11 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { setDoc, doc, updateDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
+import { updateDoc, doc } from "firebase/firestore";
 import { reload } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Order } from "@/types";
-import { recordOrderSales } from "@/lib/sales";
 
 import Navbar from "@/components/home/Navbar";
 import Footer from "@/components/home/Footer";
@@ -82,15 +81,6 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card" | "wallet">("cod");
 
-  const [cardDetails, setCardDetails] = useState({
-    number: "",
-    name: "",
-    expiry: "",
-    cvv: "",
-  });
-
-  const [walletPhone, setWalletPhone] = useState("");
-
   // Redirect to login if unauthenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -111,13 +101,6 @@ export default function CheckoutPage() {
         street: prev.street || userProfile?.shippingAddress?.street || "",
         building: prev.building || userProfile?.shippingAddress?.building || "",
       }));
-
-      if (userProfile?.name && !cardDetails.name) {
-        setCardDetails((prev) => ({ ...prev, name: userProfile.name.toUpperCase() }));
-      }
-      if (userProfile?.phone && !walletPhone) {
-        setWalletPhone(userProfile.phone);
-      }
     }
   }, [user, userProfile]);
 
@@ -149,7 +132,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 2. Refresh User & Verify Email (Google accounts already verified)
+      // 2. Refresh User & Verify Email (Google accounts are pre-verified)
       await reload(currentUser);
       const isGoogleUser =
         currentUser.providerData.some((p) => p.providerId === "google.com") ||
@@ -165,101 +148,76 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 3. Check Required Fields
-      if (!formData.fullName.trim() || !formData.phone.trim() || !formData.street.trim() || !formData.city.trim()) {
+      // 3. Check Required Shipping Fields
+      if (
+        !formData.fullName.trim() ||
+        !formData.phone.trim() ||
+        !formData.governorate.trim() ||
+        !formData.city.trim() ||
+        !formData.street.trim() ||
+        !formData.building.trim()
+      ) {
         showToast(
           language === "ar"
-            ? "يرجى استكمال كافة بيانات الشحن الإلزامية."
-            : "Please fill in all required shipping fields.",
+            ? "يرجى استكمال كافة بيانات الشحن الإلزامية (الاسم، الهاتف، المحافظة، المدينة، الشارع، العمارة)."
+            : "Please fill in all required shipping fields (Full name, phone, governorate, city, street, building).",
           "error"
         );
         return;
       }
 
-      // Re-verify new-customer coupon eligibility if ESKM is applied
-      if (coupon?.code === "ESKM") {
-        try {
-          const q = query(
-            collection(db, "orders"),
-            where("userId", "==", currentUser.uid),
-            limit(1)
-          );
-          const snap = await getDocs(q);
-          if (!snap.empty) {
-            removeCoupon();
-            showToast(
-              language === "ar"
-                ? "كوبون ESKM مخصص للعملاء الجدد فقط في طلبهم الأول. تم إزالة الكوبون."
-                : "Coupon ESKM is only valid for new customers on their first order. Coupon removed.",
-              "error"
-            );
-            setLoading(false);
-            return;
-          }
-        } catch (couponCheckErr) {
-          console.warn("Could not re-verify coupon at checkout:", couponCheckErr);
-        }
-      }
+      // 4. Get authenticated ID token for server-side verification
+      const idToken = await currentUser.getIdToken();
 
-      // 4. Create Collision-Resistant Order Object
-      const timeComponent = Date.now().toString(36).toUpperCase();
-      const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const orderId = `NS-${new Date().getFullYear()}-${timeComponent}-${randomSuffix}`;
-      const orderDateStr = new Date().toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+      // 5. Send trusted order preparation request to server
+      const prepareResponse = await fetch("/api/orders/prepare", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+          })),
+          couponCode: coupon?.code || null,
+          shippingAddress: {
+            fullName: formData.fullName.trim(),
+            phone: formData.phone.trim(),
+            governorate: formData.governorate.trim(),
+            city: formData.city.trim(),
+            street: formData.street.trim(),
+            building: formData.building.trim(),
+            apartment: formData.notes?.trim() || undefined,
+          },
+          paymentMethod,
+          notes: formData.notes?.trim() || undefined,
+        }),
       });
 
-      const newOrder: Order = {
-        id: orderId,
-        orderDate: orderDateStr,
-        userId: currentUser.uid,
-        userEmail: currentUser.email || formData.email,
-        customerDetails: {
-          fullName: formData.fullName,
-          email: currentUser.email || formData.email,
-          phone: formData.phone,
-        },
-        items: cart,
-        subtotal,
-        shipping,
-        vat,
-        discount: discountAmount,
-        total,
-        shippingAddress: {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          governorate: formData.governorate,
-          city: formData.city,
-          street: formData.street,
-          building: formData.building,
-          apartment: formData.notes,
-        },
-        paymentMethod,
-        paymentStatus: paymentMethod === "cod" ? "paid" : "pending",
-        status: "Processing",
-        orderStatus: "Processing",
-        estimatedDelivery: language === "ar" ? "خلال 2 إلى 4 أيام عمل" : "3-5 Business Days",
-        trackingNumber: `EG-TRK-${Math.floor(100000 + Math.random() * 900000)}`,
-        createdAt: new Date().toISOString(),
-      };
+      const prepareData = await prepareResponse.json();
 
-      // 5. Save Order to Firestore `orders/{orderId}`
-      try {
-        await setDoc(doc(db, "orders", orderId), newOrder);
-      } catch (dbErr) {
-        console.warn("Could not save order to Firestore directly (offline or permissions):", dbErr);
+      if (!prepareResponse.ok) {
+        console.error("Order preparation failed:", prepareData);
+
+        if (prepareData.code === "COUPON_NEW_CUSTOMERS_ONLY") {
+          removeCoupon();
+        }
+
+        showToast(
+          prepareData.error ||
+            (language === "ar"
+              ? "تعذر إعداد الطلب، يرجى مراجعة محتويات السلة والمحاولة مجدداً."
+              : "Unable to prepare order. Please check your cart and try again."),
+          "error"
+        );
+        return;
       }
 
-      // 5.5 Update aggregated sales data for productSales/{productId} (idempotent)
-      try {
-        await recordOrderSales(newOrder);
-      } catch (salesErr) {
-        console.warn("Could not record sales aggregation:", salesErr);
-      }
+      const { orderId } = prepareData;
 
-      // 6. Update user's shipping address in Firestore `users/{uid}` for seamless reordering
+      // 6. Update user's shipping address in Firestore `users/{uid}` for quick reordering
       try {
         await updateDoc(doc(db, "users", currentUser.uid), {
           phone: formData.phone,
@@ -277,36 +235,98 @@ export default function CheckoutPage() {
         console.warn("Could not update user shipping address:", upErr);
       }
 
-      // 7. Save Order to LocalStorage partitioned strictly by user UID
-      localStorage.setItem(`negm_latest_order_${currentUser.uid}`, JSON.stringify(newOrder));
+      // 7. Save Order Reference to LocalStorage partitioned strictly by user UID
       try {
+        const orderSummary = {
+          id: orderId,
+          orderDate: new Date().toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          userId: currentUser.uid,
+          userEmail: currentUser.email || formData.email,
+          items: cart,
+          total: prepareData.pricing?.total ?? total,
+          paymentMethod,
+          paymentStatus: prepareData.paymentStatus ?? "pending",
+          status: prepareData.orderStatus ?? (paymentMethod === "cod" ? "Processing" : "Pending"),
+          createdAt: new Date().toISOString(),
+        };
+
+        localStorage.setItem(`negm_latest_order_${currentUser.uid}`, JSON.stringify(orderSummary));
         const historyKey = `negm_orders_history_${currentUser.uid}`;
         const history: Order[] = JSON.parse(localStorage.getItem(historyKey) || "[]");
         const filteredHistory = history.filter((o) => o && o.userId === currentUser.uid);
-        localStorage.setItem(historyKey, JSON.stringify([newOrder, ...filteredHistory]));
-        if (localStorage.getItem("negm_latest_order")) localStorage.removeItem("negm_latest_order");
-        if (localStorage.getItem("negm_orders_history")) localStorage.removeItem("negm_orders_history");
+        localStorage.setItem(historyKey, JSON.stringify([orderSummary, ...filteredHistory]));
       } catch (lsErr) {
-        console.error("Local history error:", lsErr);
+        console.error("Local history save error:", lsErr);
       }
 
-      // 8. Clear Cart & Show Notification
-      clearCart();
-      showToast(
-        language === "ar"
-          ? `تم تأكيد طلبك بنجاح! رقم الطلب: ${orderId}`
-          : `Order ${orderId} placed successfully!`,
-        "success"
-      );
+      // 8. Handle payment flow by method
+      if (paymentMethod === "cod") {
+        // Cash on Delivery: Order confirmed immediately
+        clearCart();
+        showToast(
+          language === "ar"
+            ? `تم تأكيد طلبك بنجاح! رقم الطلب: ${orderId}`
+            : `Order ${orderId} placed successfully!`,
+          "success"
+        );
+        router.push(`/order-success?orderId=${encodeURIComponent(orderId)}`);
+        return;
+      }
 
-      // 9. Navigate to order confirmation
-      router.push("/order-success");
+      // Online payment (Card or Wallet) via Paymob Intention + Unified Checkout
+      const paymobResponse = await fetch("/api/payments/paymob/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          orderId,
+          paymentMethod,
+        }),
+      });
+
+      const paymobData = await paymobResponse.json();
+
+      if (!paymobResponse.ok) {
+        console.warn("Paymob creation response:", paymobData);
+
+        if (paymobData.code === "PAYMOB_NOT_CONFIGURED" || paymobResponse.status === 503) {
+          showToast(
+            language === "ar"
+              ? "بوابة الدفع الإلكتروني قيد الإعداد حالياً. يرجى اختيار الدفع عند الاستلام (COD) لإتمام طلبك."
+              : "Online payment is currently being configured. Please choose Cash on Delivery (COD) to place your order.",
+            "info"
+          );
+        } else {
+          showToast(
+            paymobData.error ||
+              (language === "ar"
+                ? "تعذر بدء الدفع الإلكتروني، يرجى المحاولة مرة أخرى."
+                : "Unable to initialize online payment. Please try again."),
+            "error"
+          );
+        }
+        return;
+      }
+
+      // Clear local cart and redirect to Paymob Unified Checkout
+      clearCart();
+      if (paymobData.checkoutUrl) {
+        window.location.href = paymobData.checkoutUrl;
+      } else {
+        router.push(`/order-success?orderId=${encodeURIComponent(orderId)}&status=pending`);
+      }
     } catch (error: any) {
       console.error("Checkout error:", error);
       showToast(
         language === "ar"
-          ? "تعذر إتمام الطلب، يرجى المحاولة مرة أخرى."
-          : "Unable to place order. Please try again.",
+          ? "تعذر إتمام الطلب، يرجى التحقق من اتصالك والمحاولة مجدداً."
+          : "Unable to place order. Please check your connection and try again.",
         "error"
       );
     } finally {
@@ -603,54 +623,43 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {/* Card Details Mockup */}
+              {/* Card Payment Notice */}
               {paymentMethod === "card" && (
-                <div className="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] space-y-3">
-                  <div className="text-xs font-bold text-[#D4A017] uppercase">
-                    {language === "ar" ? "بيانات البطاقة البنكية" : "Credit Card Details"}
+                <div className="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#D4A017] uppercase">
+                    <CreditCard className="h-4 w-4" />
+                    <span>{language === "ar" ? "الدفع الإلكتروني الآمن عبر البطاقة البنكية" : "Secure Credit / Debit Card Checkout"}</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="text-slate-600 dark:text-gray-400 block mb-1">
-                        {language === "ar" ? "رقم البطاقة" : "Card Number"}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="•••• •••• •••• ••••"
-                        value={cardDetails.number}
-                        onChange={(e) => setCardDetails({ ...cardDetails, number: e.target.value })}
-                        className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-3 py-2 text-slate-900 dark:text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-slate-600 dark:text-gray-400 block mb-1">
-                        {language === "ar" ? "اسم صاحب البطاقة" : "Cardholder Name"}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="NAME ON CARD"
-                        value={cardDetails.name}
-                        onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value })}
-                        className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-3 py-2 text-slate-900 dark:text-white"
-                      />
-                    </div>
+                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
+                    {language === "ar"
+                      ? "سيتم تحويلك مباشرة إلى بوابة Paymob المشفرة للدفع بأمان بواسطة بطاقتك (Visa أو MasterCard أو ميزة). متجر نجم لا يطلب ولا يخزن أرقام بطاقتك أو رمز CVV."
+                      : "You will be securely redirected to Paymob's encrypted checkout to complete your payment (Visa, Mastercard, Meeza). We never store or process your card number or CVV."}
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 text-[10px] text-slate-500 dark:text-gray-400 font-semibold">
+                    <span>🔒 256-bit SSL Encrypted</span>
+                    <span>•</span>
+                    <span>PCI-DSS Level 1 Gateway</span>
                   </div>
                 </div>
               )}
 
-              {/* Wallet Phone */}
+              {/* Wallet Payment Notice */}
               {paymentMethod === "wallet" && (
-                <div className="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] space-y-3">
-                  <div className="text-xs font-bold text-[#D4A017] uppercase">
-                    {language === "ar" ? "رقم المحفظة / عنوان إنستاباي" : "Wallet Mobile Number / IPA"}
+                <div className="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#D4A017] uppercase">
+                    <Smartphone className="h-4 w-4" />
+                    <span>{language === "ar" ? "المحافظ الإلكترونية وإنستاباي في مصر" : "Mobile Wallets & Smart Payments in Egypt"}</span>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="010XXXXXXXX or username@instapay"
-                    value={walletPhone}
-                    onChange={(e) => setWalletPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] px-3 py-2 text-xs text-slate-900 dark:text-white"
-                  />
+                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
+                    {language === "ar"
+                      ? "سيتم تحويلك إلى بوابة الدفع المعتمدة لإتمام المعاملة فوراً عبر محفظتك الإلكترونية (فودافون كاش، أورنج كاش، اتصالات كاش، وي باي، أو محفظة ميزة الذكية)."
+                      : "You will be redirected to Paymob to confirm payment via your mobile wallet (Vodafone Cash, Orange Money, Etisalat Cash, WE Pay, or Meeza Wallet)."}
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 text-[10px] text-slate-500 dark:text-gray-400 font-semibold">
+                    <span>⚡ Instant Order Confirmation</span>
+                    <span>•</span>
+                    <span>Direct Wallet Approval</span>
+                  </div>
                 </div>
               )}
             </div>

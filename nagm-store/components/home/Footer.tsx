@@ -18,13 +18,22 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative h-12 w-48">
+              <div className="relative h-11 w-11 shrink-0 rounded-xl bg-slate-800 dark:bg-[#1B1B1B] p-1 border border-slate-700 dark:border-[#D4A017]/40 shadow-md">
                 <Image
                   src="/images/negm-store-logo.png"
                   alt="Negm Store Official Logo"
-                  fill
-                  className="object-contain object-left rtl:object-right"
+                  width={44}
+                  height={44}
+                  className="object-contain w-full h-full"
                 />
+              </div>
+              <div className="leading-none">
+                <span className="text-xl font-black tracking-tight text-white">
+                  NEGM<span className="ml-1 text-[#D4A017]">STORE</span>
+                </span>
+                <p className="text-[9px] uppercase tracking-[0.2em] text-slate-400 mt-0.5 font-semibold">
+                  Luxury Auto Parts
+                </p>
               </div>
             </Link>
 
