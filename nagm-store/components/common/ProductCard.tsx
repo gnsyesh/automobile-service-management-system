@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Heart, Eye, Star, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, Heart, Eye, CheckCircle2 } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -77,15 +77,19 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 {product.shortDescription}
               </p>
 
-              {/* Rating */}
+              {/* SKU & Brand info */}
               <div className="mt-3 flex items-center gap-2">
-                <div className="flex items-center text-[#D4A017]">
-                  <Star className="h-4 w-4 fill-current" />
-                  <span className="ml-1 rtl:ml-0 rtl:mr-1 text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
-                </div>
-                <span className="text-xs text-slate-500 dark:text-gray-500">({product.reviewsCount} {t("card.reviews")})</span>
-                <span className="text-slate-400 dark:text-gray-600">•</span>
-                <span className="text-xs text-slate-500 dark:text-gray-400">{t("card.sku")}: {product.sku}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-gray-400">
+                  {t("card.sku")}: {product.sku}
+                </span>
+                {product.inStock && (
+                  <>
+                    <span className="text-slate-300 dark:text-gray-700">•</span>
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      {t("detail.inStock")}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -220,11 +224,11 @@ export default function ProductCard({ product, viewMode = "grid" }: ProductCardP
                 {product.brand}
               </span>
 
-              <div className="flex items-center text-[#D4A017] text-xs font-semibold">
-                <Star className="h-3.5 w-3.5 fill-current mr-1 rtl:mr-0 rtl:ml-1 shrink-0" />
-                <span>{product.rating}</span>
-                <span className="text-slate-400 dark:text-gray-500 ml-1 rtl:ml-0 rtl:mr-1">({product.reviewsCount})</span>
-              </div>
+              {product.inStock && (
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  {t("detail.inStock")}
+                </span>
+              )}
             </div>
 
             <Link href={`/product/${product.id}`} className="block group-hover:text-[#D4A017] transition-colors">

@@ -52,13 +52,27 @@ export async function POST(request: Request) {
     const decodedToken = await verifyFirebaseToken(request);
     const uid = decodedToken.uid;
 
-    // 2. Fetch user profile from Firebase Auth to verify email status
-    const userRecord = await adminAuth.getUser(uid);
-    const isGoogleUser = userRecord.providerData.some(
+    // 2. Determine email verification and identity from decoded token with safe admin fallback
+    let emailVerified = Boolean(decodedToken.email_verified || decodedToken.emailVerified);
+    let isGoogleUser = (decodedToken.providerData || []).some(
       (p: { providerId: string }) => p.providerId === "google.com"
     );
+    let customerEmail = decodedToken.email || "";
 
-    if (!userRecord.emailVerified && !isGoogleUser) {
+    if (!emailVerified && !isGoogleUser) {
+      try {
+        const userRecord = await adminAuth.getUser(uid);
+        emailVerified = Boolean(userRecord.emailVerified);
+        isGoogleUser = (userRecord.providerData || []).some(
+          (p: { providerId: string }) => p.providerId === "google.com"
+        );
+        customerEmail = userRecord.email || customerEmail;
+      } catch (userLookupErr) {
+        console.warn("User record lookup fallback warning:", userLookupErr);
+      }
+    }
+
+    if (!emailVerified && !isGoogleUser) {
       return NextResponse.json(
         {
           error: "Please verify your email address before placing an order.",
@@ -67,8 +81,6 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-
-    const customerEmail = userRecord.email || decodedToken.email || "";
 
     // 3. Parse and validate request body
     const body = await request.json();

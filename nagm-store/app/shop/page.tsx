@@ -154,19 +154,17 @@ function ShopContent() {
       return copy.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-high") {
       return copy.sort((a, b) => b.price - a.price);
-    } else if (sortOption === "rating") {
-      return copy.sort((a, b) => b.rating - a.rating);
     } else if (sortOption === "latest") {
       return copy.sort((a, b) => b.id.localeCompare(a.id));
     } else {
-      // Popular / Default: Real sales count first, falling back to reviewsCount
+      // Popular / Default: Real sales count first, falling back to name/catalog order
       return copy.sort((a, b) => {
         const salesA = salesMap[a.id] || 0;
         const salesB = salesMap[b.id] || 0;
         if (salesB !== salesA) {
           return salesB - salesA;
         }
-        return (b.reviewsCount || 0) - (a.reviewsCount || 0);
+        return a.name.localeCompare(b.name);
       });
     }
   }, [filteredProducts, sortOption, salesMap]);
@@ -291,7 +289,6 @@ function ShopContent() {
                 <option value="latest">{t("shop.sortLatest")}</option>
                 <option value="price-low">{t("shop.sortLow")}</option>
                 <option value="price-high">{t("shop.sortHigh")}</option>
-                <option value="rating">{t("shop.sortRating")}</option>
               </select>
             </div>
           </div>

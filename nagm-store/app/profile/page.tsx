@@ -31,7 +31,9 @@ import {
   Trash2,
   RefreshCw,
   ShoppingBag,
+  MessageSquare,
 } from "lucide-react";
+import OrderFeedbackModal from "@/components/feedback/OrderFeedbackModal";
 
 const governorates = [
   "Cairo",
@@ -67,6 +69,10 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"orders" | "garage" | "addresses" | "wishlist" | "settings">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+
+  // Post-delivery feedback modal state
+  const [feedbackOrder, setFeedbackOrder] = useState<Order | null>(null);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // Settings form state
   const [editName, setEditName] = useState("");
@@ -186,6 +192,46 @@ export default function ProfilePage() {
 
     fetchUserOrders();
   }, [user]);
+
+  // Check for delivered order eligible for feedback prompt
+  useEffect(() => {
+    if (ordersLoading || orders.length === 0) return;
+    const eligibleOrder = orders.find(
+      (o) => (o.status === "Delivered" || o.orderStatus === "Delivered") && !o.feedbackSubmitted
+    );
+    if (eligibleOrder) {
+      try {
+        const dismissed =
+          typeof window !== "undefined" &&
+          sessionStorage.getItem(`negm_feedback_dismissed_${eligibleOrder.id}`);
+        if (!dismissed) {
+          setFeedbackOrder(eligibleOrder);
+          setIsFeedbackModalOpen(true);
+        }
+      } catch {}
+    }
+  }, [orders, ordersLoading]);
+
+  const handleCloseFeedback = () => {
+    if (feedbackOrder) {
+      try {
+        sessionStorage.setItem(`negm_feedback_dismissed_${feedbackOrder.id}`, "true");
+      } catch {}
+    }
+    setIsFeedbackModalOpen(false);
+  };
+
+  const handleFeedbackSubmitted = (orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId ? { ...o, feedbackSubmitted: true } : o
+      )
+    );
+    showToast(
+      language === "ar" ? "شكراً لك! تم استلام تقييمك بنجاح." : "Thank you! Your feedback has been received.",
+      "success"
+    );
+  };
 
   const handleSaveAddress = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -477,6 +523,32 @@ export default function ProfilePage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Post-delivery Feedback Row */}
+                      {(ord.status === "Delivered" || ord.orderStatus === "Delivered") && (
+                        <div className="pt-3 border-t border-slate-100 dark:border-[#2D2D2D] flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-gray-400">
+                            {language === "ar" ? "تجربة استلام الطلب" : "Overall Order & Delivery Experience"}
+                          </span>
+                          {ord.feedbackSubmitted ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              <span>{language === "ar" ? "تم استلام تقييمك ✓" : "Feedback Submitted ✓"}</span>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setFeedbackOrder(ord);
+                                setIsFeedbackModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#D4A017]/10 hover:bg-[#D4A017]/20 text-[#D4A017] text-xs font-bold border border-[#D4A017]/30 transition shadow-xs"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              <span>{language === "ar" ? "تقديم تقييم للطلب" : "Give Order Feedback"}</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -767,6 +839,13 @@ export default function ProfilePage() {
           </main>
         </div>
       </div>
+
+      <OrderFeedbackModal
+        order={feedbackOrder}
+        isOpen={isFeedbackModalOpen}
+        onClose={handleCloseFeedback}
+        onSubmitted={handleFeedbackSubmitted}
+      />
 
       <Footer />
     </main>

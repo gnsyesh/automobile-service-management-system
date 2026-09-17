@@ -219,8 +219,21 @@ export interface Order {
   stockDecremented?: boolean;
   salesRecorded?: boolean;
   expiresAt?: string;
+  feedbackSubmitted?: boolean;
+  feedbackRating?: number;
+  feedbackComment?: string;
+  feedbackAt?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface OrderFeedback {
+  orderId: string;
+  userId: string;
+  userEmail?: string;
+  rating: number; // 1-5 overall customer experience satisfaction
+  comment?: string;
+  createdAt: string;
 }
 
 export interface ProductSales {

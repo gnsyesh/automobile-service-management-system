@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, ShoppingBag, Heart, Check, Star, ShieldCheck, ArrowRight } from "lucide-react";
+import { X, ShoppingBag, Heart, Check, ShieldCheck, ArrowRight } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -102,11 +102,9 @@ export default function QuickViewModal({ product, isOpen, onClose }: QuickViewMo
                 </h2>
 
                 <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <div className="flex items-center text-[#D4A017]">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="ml-1 text-sm font-bold text-slate-900 dark:text-white">{product.rating}</span>
-                  </div>
-                  <span className="text-xs text-slate-500 dark:text-gray-500">({product.reviewsCount} verified reviews)</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-gray-400">
+                    SKU: {product.sku}
+                  </span>
                   <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5" /> 100% Genuine
                   </span>
