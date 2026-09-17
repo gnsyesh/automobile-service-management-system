@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  MessageSquareQuote,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -68,6 +69,11 @@ export default function AdminSidebar() {
       name: t("admin.customers"),
       href: "/admin/customers",
       icon: Users,
+    },
+    {
+      name: language === "ar" ? "آراء العملاء" : "Customer Feedback",
+      href: "/admin/feedback",
+      icon: MessageSquareQuote,
     },
   ];
 

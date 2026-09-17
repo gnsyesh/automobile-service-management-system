@@ -174,6 +174,7 @@ export interface QuerySnapshot<T = any> {
   empty: boolean;
   size: number;
   docs: DocumentSnapshot<T>[];
+  forEach: (callback: (doc: DocumentSnapshot<T>) => void) => void;
 }
 
 export class DocumentReference<T = any> {
@@ -402,6 +403,7 @@ export class Query<T = any> {
       empty: docs.length === 0,
       size: docs.length,
       docs,
+      forEach: (callback: (doc: DocumentSnapshot<T>) => void) => docs.forEach(callback),
     };
   }
 }

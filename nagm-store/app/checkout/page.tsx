@@ -247,10 +247,16 @@ export default function CheckoutPage() {
           userId: currentUser.uid,
           userEmail: currentUser.email || formData.email,
           items: cart,
+          subtotal: prepareData.pricing?.subtotal ?? subtotal,
+          discount: prepareData.pricing?.discountAmount ?? discountAmount,
+          shipping: prepareData.pricing?.shipping ?? shipping,
+          vat: prepareData.pricing?.vat ?? vat,
           total: prepareData.pricing?.total ?? total,
           paymentMethod,
           paymentStatus: prepareData.paymentStatus ?? "pending",
           status: prepareData.orderStatus ?? (paymentMethod === "cod" ? "Processing" : "Pending"),
+          estimatedDelivery: "To be confirmed",
+          trackingNumber: "To be assigned",
           createdAt: new Date().toISOString(),
         };
 

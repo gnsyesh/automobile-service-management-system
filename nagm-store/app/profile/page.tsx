@@ -32,6 +32,7 @@ import {
   RefreshCw,
   ShoppingBag,
   MessageSquare,
+  Download,
 } from "lucide-react";
 import OrderFeedbackModal from "@/components/feedback/OrderFeedbackModal";
 
@@ -78,6 +79,7 @@ export default function ProfilePage() {
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
+  const [downloadingOrderId, setDownloadingOrderId] = useState<string | null>(null);
 
   // Address editing state
   const [editingAddress, setEditingAddress] = useState(false);
@@ -231,6 +233,50 @@ export default function ProfilePage() {
       language === "ar" ? "شكراً لك! تم استلام تقييمك بنجاح." : "Thank you! Your feedback has been received.",
       "success"
     );
+  };
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    if (!user) return;
+    setDownloadingOrderId(orderId);
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch(`/api/orders/${orderId}/invoice`, {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        showToast(
+          language === "ar" ? "تعذر تنزيل الفاتورة" : "Failed to download invoice",
+          "error"
+        );
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Invoice-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast(
+        language === "ar" ? "تم تنزيل الفاتورة بنجاح" : "Invoice downloaded successfully",
+        "success"
+      );
+    } catch (err) {
+      console.error("Invoice download error:", err);
+      showToast(
+        language === "ar" ? "حدث خطأ أثناء تنزيل الفاتورة" : "Error generating invoice PDF",
+        "error"
+      );
+    } finally {
+      setDownloadingOrderId(null);
+    }
   };
 
   const handleSaveAddress = async (e: React.FormEvent) => {
@@ -515,12 +561,26 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        <div className="sm:text-right rtl:sm:text-left">
-                          <div className="text-slate-500 dark:text-gray-400">{t("profile.totalPaid")}</div>
-                          <div className="text-lg font-black text-slate-900 dark:text-white">
-                            {ord.total.toLocaleString()}{" "}
-                            <span className="text-xs text-[#D4A017]">EGP</span>
+                        <div className="sm:text-right rtl:sm:text-left flex flex-col sm:items-end gap-2">
+                          <div>
+                            <div className="text-slate-500 dark:text-gray-400">{t("profile.totalPaid")}</div>
+                            <div className="text-lg font-black text-slate-900 dark:text-white">
+                              {ord.total.toLocaleString()}{" "}
+                              <span className="text-xs text-[#D4A017]">EGP</span>
+                            </div>
                           </div>
+                          <button
+                            onClick={() => handleDownloadInvoice(ord.id)}
+                            disabled={downloadingOrderId === ord.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-white dark:bg-[#1B1B1B] hover:border-[#D4A017] text-slate-700 dark:text-gray-300 text-xs font-bold transition shadow-xs self-start sm:self-auto"
+                          >
+                            {downloadingOrderId === ord.id ? (
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#D4A017]" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5 text-[#D4A017]" />
+                            )}
+                            <span>{language === "ar" ? "تنزيل الفاتورة (PDF)" : "Download Invoice"}</span>
+                          </button>
                         </div>
                       </div>
 
