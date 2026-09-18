@@ -194,7 +194,6 @@ export const en = {
   "checkout.placeOrder": "Place Order",
   "checkout.cod": "Cash on Delivery",
   "checkout.card": "Credit / Debit Card",
-  "checkout.wallet": "E-Wallet (Vodafone Cash / InstaPay)",
   "checkout.governorate": "Governorate",
   "checkout.address": "Detailed Address",
   "checkout.phone": "Mobile Number",
@@ -306,7 +305,6 @@ export const en = {
   "checkout.building": "Building, Floor, Apartment",
   "checkout.payCourier": "Pay when courier arrives",
   "checkout.cardSub": "Visa / Mastercard",
-  "checkout.walletSub": "Vodafone Cash / InstaPay",
   "checkout.orderSummary": "Order Summary",
   "checkout.placeOrderNow": "Place Order Now",
   "checkout.orderEmpty": "No items in cart to checkout",
@@ -324,7 +322,6 @@ export const en = {
   "profile.displayName": "Display Name",
   "profile.saveSettings": "Save Settings",
   "profile.totalPaid": "Total Paid:",
-  "profile.tracking": "Tracking:",
   "profile.recipient": "Recipient:",
 
   // Forgot Password

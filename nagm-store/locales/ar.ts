@@ -196,7 +196,6 @@ export const ar: Record<TranslationKey, string> = {
   "checkout.placeOrder": "تأكيد وإرسال الطلب",
   "checkout.cod": "الدفع نقداً عند الاستلام",
   "checkout.card": "بطاقة ميزة / فيزا / ماستركارد",
-  "checkout.wallet": "المحافظ الإلكترونية (فودافون كاش / إنستا باي)",
   "checkout.governorate": "المحافظة",
   "checkout.address": "العنوان التفصيلي",
   "checkout.phone": "رقم الموبايل للتواصل",
@@ -307,7 +306,6 @@ export const ar: Record<TranslationKey, string> = {
   "checkout.building": "رقم المبنى، الطابق، الشقة",
   "checkout.payCourier": "الدفع نقداً عند استلام الشحنة",
   "checkout.cardSub": "فيزا / ماستركارد / ميزة",
-  "checkout.walletSub": "فودافون كاش / إنستاباي",
   "checkout.orderSummary": "ملخص الطلب",
   "checkout.placeOrderNow": "تأكيد الطلب الآن",
   "checkout.orderEmpty": "لا توجد منتجات في السلة لإتمام الطلب",
@@ -325,7 +323,6 @@ export const ar: Record<TranslationKey, string> = {
   "profile.displayName": "الاسم المعروض",
   "profile.saveSettings": "حفظ الإعدادات",
   "profile.totalPaid": "إجمالي المدفوع:",
-  "profile.tracking": "رقم التتبع:",
   "profile.recipient": "المستلم:",
 
   // Forgot Password

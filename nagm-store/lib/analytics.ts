@@ -61,24 +61,40 @@ export function normalizeDate(dateVal: unknown): Date | null {
 
 /**
  * Extracts the canonical Date representation of an order.
- * Inspects `createdAt`, then `orderDate`, then `updatedAt`.
+ * Inspects `createdAt` first (canonical), then legacy `orderDate`.
+ * Does NOT use `updatedAt` as order creation date.
  */
 export function getOrderDate(order: Order): Date | null {
   return (
     normalizeDate(order.createdAt) ||
-    normalizeDate(order.orderDate) ||
-    normalizeDate(order.updatedAt)
+    normalizeDate(order.orderDate)
   );
 }
 
 /**
- * CANONICAL REVENUE RULE:
- * Revenue is computed from all non-cancelled orders ('Pending', 'Processing', 'Shipped', 'Delivered').
- * Orders with status 'Cancelled' are strictly excluded from gross revenue and average order value.
+ * CANONICAL REVENUE QUALIFICATION RULE:
+ * - Excludes Cancelled orders
+ * - Excludes orders with total <= 0
+ * - Excludes unsupported payment methods (only cod and card supported)
+ * - COD orders qualify when placed
+ * - Card orders qualify ONLY when paymentStatus === 'paid' (unpaid/failed Card orders NEVER count as revenue)
  */
 export function isQualifyingRevenueOrder(order: Order): boolean {
+  if (!order) return false;
   const s = (order.status || order.orderStatus || "").toLowerCase();
-  return s !== "cancelled" && (order.total || 0) > 0;
+  if (s === "cancelled") return false;
+  if ((order.total || 0) <= 0) return false;
+
+  const paymentMethod = order.paymentMethod;
+  if (paymentMethod !== "cod" && paymentMethod !== "card") return false;
+
+  if (paymentMethod === "cod") return true;
+
+  if (paymentMethod === "card") {
+    return order.paymentStatus === "paid";
+  }
+
+  return false;
 }
 
 /**
@@ -244,10 +260,10 @@ export function calculatePeriodMetrics(orders: Order[]): PeriodMetrics {
   const qualifyingOrders = orders.filter(isQualifyingRevenueOrder);
   const revenue = qualifyingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const ordersCount = qualifyingOrders.length;
-  const averageOrderValue = ordersCount > 0 ? Math.round(revenue / ordersCount) : 0;
+  const averageOrderValue = ordersCount > 0 ? Math.round((revenue / ordersCount) * 100) / 100 : 0;
 
   const uniqueCustomerIds = new Set<string>();
-  orders.forEach((o) => {
+  qualifyingOrders.forEach((o) => {
     if (o.userId) uniqueCustomerIds.add(o.userId);
     else if (o.userEmail) uniqueCustomerIds.add(o.userEmail);
   });
@@ -406,14 +422,15 @@ export function aggregateTopSellingProducts(
       const existing = productMap.get(pid) || {
         id: pid,
         name: prod.name || "Unnamed Product",
-        brand: prod.brand || "Negm Store",
+        brand: prod.brand || "Unknown Brand",
         quantity: 0,
         revenue: 0,
       };
 
       const qty = item.quantity || 1;
+      const price = Number((item as any).price ?? prod.price) || 0;
       existing.quantity += qty;
-      existing.revenue += (prod.price || 0) * qty;
+      existing.revenue += price * qty;
       productMap.set(pid, existing);
     });
   });
@@ -480,11 +497,12 @@ export function aggregateCategoryPerformance(
     if (!Array.isArray(o.items)) return;
 
     o.items.forEach((item) => {
-      const cat = item.product?.category || "accessories";
+      const cat = item.product?.category || "Uncategorized";
       const existing = catMap.get(cat) || { revenue: 0, unitsSold: 0 };
       const qty = item.quantity || 1;
+      const price = Number((item as any).price ?? item.product?.price) || 0;
       existing.unitsSold += qty;
-      existing.revenue += (item.product?.price || 0) * qty;
+      existing.revenue += price * qty;
       catMap.set(cat, existing);
     });
   });

@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       items?: CartRequestItem[];
       couponCode?: string | null;
       shippingAddress?: ShippingAddress;
-      paymentMethod?: "cod" | "card" | "wallet";
+      paymentMethod?: "cod" | "card";
       notes?: string;
     } = body;
 
@@ -122,14 +122,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate payment method
-    if (
-      paymentMethod !== "cod" &&
-      paymentMethod !== "card" &&
-      paymentMethod !== "wallet"
-    ) {
+    // Validate payment method - only COD and Card are supported
+    if (paymentMethod !== "cod" && paymentMethod !== "card") {
       return NextResponse.json(
-        { error: "Invalid payment method", code: "INVALID_PAYMENT_METHOD" },
+        {
+          error: "Invalid payment method. Only Cash on Delivery and Credit/Debit Card are supported.",
+          code: "INVALID_PAYMENT_METHOD",
+        },
         { status: 400 }
       );
     }
@@ -271,14 +270,23 @@ export async function POST(request: Request) {
 
         subtotal += price * reqItem.quantity;
 
-        // Decrement product stock inside transaction
-        const newStockCount = stockCount - reqItem.quantity;
-        const productRef = adminDb.collection("products").doc(reqItem.productId);
-        transaction.update(productRef, {
-          stockCount: newStockCount,
-          inStock: newStockCount > 0,
-          updatedAt: nowIso,
-        });
+        // Decrement product stock only for COD orders.
+// Card orders decrease stock only after successful Paymob payment.
+
+const productRef = adminDb.collection("products").doc(reqItem.productId);
+
+const shouldDecrementStock = paymentMethod === "cod";
+const resultingStockCount = shouldDecrementStock
+  ? stockCount - reqItem.quantity
+  : stockCount;
+
+if (shouldDecrementStock) {
+  transaction.update(productRef, {
+    stockCount: resultingStockCount,
+    inStock: resultingStockCount > 0,
+    updatedAt: nowIso,
+  });
+}
 
         trustedItems.push({
           product: {
@@ -293,8 +301,8 @@ export async function POST(request: Request) {
             discount: productData.discount,
             rating: productData.rating ?? 0,
             reviewsCount: productData.reviewsCount ?? 0,
-            inStock: newStockCount > 0,
-            stockCount: newStockCount,
+            inStock: resultingStockCount > 0,
+            stockCount: resultingStockCount,
             isFeatured: productData.isFeatured,
             isBestSeller: productData.isBestSeller,
             isOffer: productData.isOffer,
@@ -314,6 +322,7 @@ export async function POST(request: Request) {
             frequentlyBoughtTogetherIds: productData.frequentlyBoughtTogetherIds,
           },
           quantity: reqItem.quantity,
+          price,
         });
       }
 
@@ -366,7 +375,7 @@ export async function POST(request: Request) {
           city: shippingAddress.city.trim(),
           street: shippingAddress.street.trim(),
           building: shippingAddress.building.trim(),
-          apartment: shippingAddress.apartment?.trim() || notes?.trim() || "",
+          apartment: shippingAddress.apartment?.trim() || "",
         },
         paymentMethod,
         paymentStatus: "pending",
@@ -374,11 +383,10 @@ export async function POST(request: Request) {
         status: paymentMethod === "cod" ? "Processing" : "Pending",
         orderStatus: paymentMethod === "cod" ? "Processing" : "Pending",
         estimatedDelivery: "3-5 Business Days",
-        trackingNumber: `EG-TRK-${Math.floor(100000 + Math.random() * 900000)}`,
         couponCode: appliedCoupon,
         notes: notes?.trim() || undefined,
-        stockDecremented: true,
-        salesRecorded: paymentMethod === "cod",
+        stockDecremented: paymentMethod === "cod",
+        salesRecorded: false,
         expiresAt,
         createdAt: nowIso,
         updatedAt: nowIso,
@@ -393,9 +401,23 @@ export async function POST(request: Request) {
     // 6. For COD: record sales aggregation server-side (only after successful transaction)
     if (createdOrder.paymentMethod === "cod") {
       try {
-        await recordOrderSalesServer(createdOrder);
+        const salesRecorded = await recordOrderSalesServer(createdOrder);
+        if (salesRecorded) {
+          await adminDb.collection("orders").doc(createdOrder.id).update({
+            salesRecorded: true,
+            updatedAt: new Date().toISOString(),
+          });
+          createdOrder.salesRecorded = true;
+        } else {
+          console.error(
+            `[SALES_RECORD_FAILURE] Order ${createdOrder.id} (COD, total: ${createdOrder.total}) prepared and stock deducted, but sales recording returned false.`
+          );
+        }
       } catch (salesErr) {
-        console.warn("Could not record sales aggregation for COD order:", salesErr);
+        console.error(
+          `[SALES_RECORD_ERROR] Order ${createdOrder.id} (COD, total: ${createdOrder.total}) prepared, but sales recording threw error:`,
+          salesErr
+        );
       }
     }
 
@@ -403,6 +425,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       orderId: createdOrder.id,
+      salesRecorded: createdOrder.salesRecorded === true,
       pricing: {
         subtotal: createdOrder.subtotal,
         discountAmount: createdOrder.discount || 0,

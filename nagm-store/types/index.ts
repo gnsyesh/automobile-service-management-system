@@ -94,6 +94,7 @@ export interface VehicleMake {
 export interface CartItem {
   product: Product;
   quantity: number;
+  price?: number;
 }
 
 export interface WishlistItem {
@@ -206,14 +207,13 @@ export interface Order {
   discount?: number;
   total: number;
   shippingAddress: Address;
-  paymentMethod: 'cod' | 'card' | 'wallet';
+  paymentMethod: 'cod' | 'card';
   paymentStatus?: PaymentStatus;
   paymentTransactionId?: string;
   paymentReference?: string;
   status: OrderStatus;
   orderStatus?: OrderStatus;
   estimatedDelivery?: string;
-  trackingNumber?: string;
   couponCode?: string | null;
   notes?: string;
   stockDecremented?: boolean;

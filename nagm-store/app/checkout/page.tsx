@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   CreditCard,
   Banknote,
-  Smartphone,
   ArrowLeft,
   ShoppingBag,
   RefreshCw,
@@ -76,10 +75,11 @@ export default function CheckoutPage() {
     city: "",
     street: "",
     building: "",
+    apartment: "",
     notes: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "card" | "wallet">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
 
   // Redirect to login if unauthenticated
   useEffect(() => {
@@ -100,6 +100,7 @@ export default function CheckoutPage() {
         city: prev.city || userProfile?.shippingAddress?.city || "",
         street: prev.street || userProfile?.shippingAddress?.street || "",
         building: prev.building || userProfile?.shippingAddress?.building || "",
+        apartment: prev.apartment || userProfile?.shippingAddress?.apartment || "",
       }));
     }
   }, [user, userProfile]);
@@ -189,7 +190,7 @@ export default function CheckoutPage() {
             city: formData.city.trim(),
             street: formData.street.trim(),
             building: formData.building.trim(),
-            apartment: formData.notes?.trim() || undefined,
+            apartment: formData.apartment?.trim() || undefined,
           },
           paymentMethod,
           notes: formData.notes?.trim() || undefined,
@@ -256,7 +257,6 @@ export default function CheckoutPage() {
           paymentStatus: prepareData.paymentStatus ?? "pending",
           status: prepareData.orderStatus ?? (paymentMethod === "cod" ? "Processing" : "Pending"),
           estimatedDelivery: "To be confirmed",
-          trackingNumber: "To be assigned",
           createdAt: new Date().toISOString(),
         };
 
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Online payment (Card or Wallet) via Paymob Intention + Unified Checkout
+      // Online payment (Card) via Paymob Intention + Unified Checkout
       const paymobResponse = await fetch("/api/payments/paymob/create", {
         method: "POST",
         headers: {
@@ -549,17 +549,46 @@ export default function CheckoutPage() {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    {t("checkout.building")}
+                    {t("checkout.building")} *
                   </label>
                   <input
                     type="text"
                     name="building"
                     value={formData.building}
                     onChange={handleChange}
-                    placeholder={language === "ar" ? "رقم العمارة، الدور، الشقة" : "Building number, floor, apartment"}
+                    required
+                    placeholder={language === "ar" ? "رقم العمارة" : "Building number"}
                     className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-xs text-slate-900 dark:text-white focus:border-[#D4A017] focus:bg-white dark:focus:bg-[#111111] focus:outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                    {language === "ar" ? "الشقة / الطابق" : "Apartment / Floor"}
+                  </label>
+                  <input
+                    type="text"
+                    name="apartment"
+                    value={formData.apartment}
+                    onChange={handleChange}
+                    placeholder={language === "ar" ? "رقم الشقة، الطابق (اختياري)" : "Apartment, floor (optional)"}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-xs text-slate-900 dark:text-white focus:border-[#D4A017] focus:bg-white dark:focus:bg-[#111111] focus:outline-none transition"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                    {language === "ar" ? "ملاحظات الطلب أو التوصيل" : "Order / Delivery Notes"}
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder={language === "ar" ? "أي تعليمات خاصة بالسائق أو التوصيل (اختياري)" : "Any special instructions for delivery (optional)"}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] px-4 py-3 text-xs text-slate-900 dark:text-white focus:border-[#D4A017] focus:bg-white dark:focus:bg-[#111111] focus:outline-none transition resize-none"
                   />
                 </div>
               </div>
@@ -574,7 +603,7 @@ export default function CheckoutPage() {
                 {t("checkout.payment")}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* COD */}
                 <button
                   type="button"
@@ -608,25 +637,6 @@ export default function CheckoutPage() {
                     {t("checkout.cardSub")}
                   </span>
                 </button>
-
-                {/* WALLET */}
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("wallet")}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition ${
-                    paymentMethod === "wallet"
-                      ? "border-[#D4A017] bg-[#8B3A2E]/10 dark:bg-[#8B3A2E]/20 text-slate-900 dark:text-white shadow-sm ring-1 ring-[#D4A017]"
-                      : "border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <Smartphone className="h-6 w-6 text-[#D4A017] mb-2" />
-                  <span className="text-xs font-bold">
-                    {language === "ar" ? "محفظة إلكترونية / إنستاباي" : "E-Wallet / InstaPay"}
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-1">
-                    {t("checkout.walletSub")}
-                  </span>
-                </button>
               </div>
 
               {/* Card Payment Notice */}
@@ -645,26 +655,6 @@ export default function CheckoutPage() {
                     <span>🔒 256-bit SSL Encrypted</span>
                     <span>•</span>
                     <span>PCI-DSS Level 1 Gateway</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Wallet Payment Notice */}
-              {paymentMethod === "wallet" && (
-                <div className="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#D4A017] uppercase">
-                    <Smartphone className="h-4 w-4" />
-                    <span>{language === "ar" ? "المحافظ الإلكترونية وإنستاباي في مصر" : "Mobile Wallets & Smart Payments in Egypt"}</span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-                    {language === "ar"
-                      ? "سيتم تحويلك إلى بوابة الدفع المعتمدة لإتمام المعاملة فوراً عبر محفظتك الإلكترونية (فودافون كاش، أورنج كاش، اتصالات كاش، وي باي، أو محفظة ميزة الذكية)."
-                      : "You will be redirected to Paymob to confirm payment via your mobile wallet (Vodafone Cash, Orange Money, Etisalat Cash, WE Pay, or Meeza Wallet)."}
-                  </p>
-                  <div className="flex items-center gap-2 pt-1 text-[10px] text-slate-500 dark:text-gray-400 font-semibold">
-                    <span>⚡ Instant Order Confirmation</span>
-                    <span>•</span>
-                    <span>Direct Wallet Approval</span>
                   </div>
                 </div>
               )}

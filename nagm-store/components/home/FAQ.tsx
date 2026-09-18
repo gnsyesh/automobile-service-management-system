@@ -10,47 +10,47 @@ export default function FAQ() {
 
   const faqsEn = [
     {
-      q: "How do I ensure a spare part fits my specific car model?",
-      a: "Use our 'Select My Vehicle' feature at the top of the store or homepage. By specifying your car Make, Model, Year, and Engine, our algorithm automatically filters products guaranteed to fit your exact vehicle."
+      q: "How do I check part compatibility with my vehicle?",
+      a: "You can select your vehicle Make, Model, and Year using our vehicle selector, or review the compatibility list and specifications provided on each product page."
     },
     {
-      q: "Are all motor oils and parts on Negm Store 100% genuine?",
-      a: "Yes. All lubricants (Mobil 1, Shell, Castrol, Liqui Moly) and spare parts (Bosch, Brembo, Mann-Filter) come directly from authorized Egyptian importers and feature original manufacturer security seals and batch QR codes."
+      q: "What automotive products and brands are available on Negm Store?",
+      a: "We offer automotive maintenance essentials including engine oils, filters, brake parts, and car care accessories from recognized automotive brands."
     },
     {
-      q: "What are your delivery times and shipping costs across Egypt?",
-      a: "We offer express 24-48 hour delivery for Greater Cairo (Cairo, Giza, October 6) and 48-72 hours for Alexandria and other governorates. Orders over 2,000 EGP receive FREE express delivery!"
+      q: "How does shipping and delivery work across Egypt?",
+      a: "Orders are shipped directly to your delivery address across Egyptian governorates. Shipping costs and estimated delivery timelines are calculated and displayed at checkout based on your location."
     },
     {
       q: "What payment methods do you accept?",
-      a: "We accept Cash on Delivery (COD), Credit/Debit Card payments (Visa & Mastercard), as well as Mobile Wallets (Vodafone Cash, Orange Money, InstaPay)."
+      a: "We accept Cash on Delivery (COD) and Credit/Debit Cards (Visa & Mastercard) through secure Paymob payment processing."
     },
     {
-      q: "What is your return and exchange policy?",
-      a: "We offer a 14-day hassle-free return or exchange window provided the product is in its original unopened packaging with invoice proof."
+      q: "How can I check order status or get assistance?",
+      a: "You can view your order status and download your invoice from your account profile, or reach out to our team for questions about your order or parts."
     }
   ];
 
   const faqsAr = [
     {
-      q: "كيف أضمن مطابقة قطعة الغيار لسيارتي تماماً؟",
-      a: "يمكنك استخدام أداة تحديد السيارة بالصفحة الرئيسية أو بالمتجر. بمجرد اختيار الماركة والموديل وسنة الصنع، يفلتر الموقع المنتجات المتوافقة مع سيارتك فقط."
+      q: "كيف يمكنني التحقق من توافق قطعة الغيار مع سيارتي؟",
+      a: "يمكنك استخدام أداة تحديد نوع وموديل وسنة صنع سيارتك، أو مراجعة المواصفات وقائمة التوافق الموضحة في صفحة كل منتج."
     },
     {
-      q: "هل جميع زيوت وقطع غيار نجم ستور أصلية 100%؟",
-      a: "نعم بالتأكيد. جميع الزيوت (موبيل 1، شل، كاسترول) وقطع الغيار (بوش، بريمبو، مان) مستوردة مباشرة من الوكلاء المعتمدين بمصر وتتضمن العلامة المائية وكود السريال الأصلي."
+      q: "ما هي المنتجات والعلامات التجارية المتوفرة في متجر نجم؟",
+      a: "نوفر مستلزمات صيانة السيارات الأساسية مثل زيوت المحركات والفلاتر ومكونات الفرامل والإكسسوارات من علامات تجارية رائدة ومعروفة."
     },
     {
-      q: "ما هي مدة وتكلفة الشحن داخل مصر؟",
-      a: "نوفر شحناً سريعاً خلال 24-48 ساعة للقاهرة الكبرى والجيزة، و48-72 ساعة للإسكندرية وباقي المحافظات. والشحن مجاني بالكامل للطلبات الأكثر من 2,000 جنيه!"
+      q: "كيف يتم شحن وتوصيل الطلبات داخل مصر؟",
+      a: "يتم توصيل الطلبات إلى عنوانك المسجل في مختلف محافظات مصر، وتظهر تكلفة الشحن وموعد التوصيل التقديري بوضوح عند إتمام الطلب بناءً على محافظتك."
     },
     {
       q: "ما هي طرق الدفع المتاحة؟",
-      a: "ندعم الدفع نقداً عند الاستلام (COD)، الكروت البنكية (فيزا وماستركارد وميزة)، والمحافظ الإلكترونية (فودافون كاش، إنستا باي، أورنج كاش)."
+      a: "ندعم الدفع نقداً عند الاستلام (COD) والدفع الإلكتروني الآمن بالبطاقات البنكية (فيزا وماستركارد) عبر بوابة Paymob."
     },
     {
-      q: "ما هي سياسة الاسترجاع والاستبدال؟",
-      a: "نوفر فترة استرجاع واستبدال مرنة لمدة 14 يوماً بشرط عدم فتح عبوة القطعة واحتفاظها بالحالة الأصلية ومرفق معها الفاتورة."
+      q: "كيف يمكنني متابعة حالة طلبي أو الحصول على مساعدة؟",
+      a: "يمكنك متابعة حالة الطلب وتنزيل الفاتورة بصيغة PDF مباشرة من حسابك، أو التواصل معنا لأي استفسارات تتعلق بطلبك ومواصفات المنتجات."
     }
   ];
 

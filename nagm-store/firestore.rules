@@ -137,12 +137,8 @@ service cloud.firestore {
       // Contains strictly non-sensitive aggregated product stats: productId, unitsSold, revenue, updatedAt.
       allow read: if true;
 
-      // Authenticated customers increment sales counters when placing orders;
-      // Admins can sync and reconcile sales aggregates.
-      allow create, update: if isAuthenticated();
-
-      // Only administrators can delete sales aggregations.
-      allow delete: if isAdmin();
+      // Server-only mutations via Firebase Admin. Block all client/browser writes.
+      allow write: if false;
     }
 
 
@@ -152,14 +148,8 @@ service cloud.firestore {
 
     match /processedSalesOrders/{orderId} {
 
-      // Authenticated users and admins can read/check processed status to prevent double-counting.
-      allow read: if isAuthenticated();
-
-      // Authenticated customers record order processing during checkout; admins can update upon status change.
-      allow create, update: if isAuthenticated();
-
-      // Only administrators can delete idempotency records.
-      allow delete: if isAdmin();
+      // Server-only idempotency tracking via Firebase Admin. Block all client/browser access.
+      allow read, write: if false;
     }
 
 

@@ -87,19 +87,6 @@ export default function OrderSuccessPage() {
             return;
           }
         }
-
-        // 3. Fallback: only if Firestore has no orders yet (e.g. offline cache)
-        if (isMounted) {
-          try {
-            const saved = localStorage.getItem(`negm_latest_order_${user.uid}`);
-            if (saved) {
-              const parsed: Order = JSON.parse(saved);
-              if (parsed.userId === user.uid) {
-                setOrder(parsed);
-              }
-            }
-          } catch {}
-        }
       } catch (err) {
         console.error("Authoritative order fetch error:", err);
       } finally {
@@ -177,9 +164,67 @@ export default function OrderSuccessPage() {
   const orderStatus = order?.status || order?.orderStatus || "Processing";
   const isPaid = paymentStatus === "paid";
   const isCodPending = paymentMethod === "cod" && !isPaid;
-  const isCardPending = paymentMethod !== "cod" && !isPaid;
+  const isCardPending = paymentMethod === "card" && !isPaid;
   const isFailed = paymentStatus === "failed";
   const isCancelled = orderStatus === "Cancelled";
+
+  // Dynamic Header Content
+  const getHeaderContent = () => {
+    if (isCancelled) {
+      return {
+        badge: language === "ar" ? "الطلب ملغي" : "ORDER CANCELLED",
+        title: language === "ar" ? "تم إلغاء هذا الطلب" : "Order Cancelled",
+        desc: language === "ar" ? "تم إلغاء هذا الطلب ولا يتم تجهيزه حالياً." : "This order has been cancelled and is not active.",
+        icon: <AlertTriangle className="h-10 w-10 sm:h-12 sm:w-12 text-slate-500 dark:text-gray-400" />,
+        iconBox: "bg-slate-500/20 text-slate-500 border-slate-500/40 shadow-[0_0_50px_rgba(100,116,139,0.2)]",
+      };
+    }
+    if (isFailed) {
+      return {
+        badge: language === "ar" ? "فشلت عملية الدفع" : "PAYMENT FAILED",
+        title: language === "ar" ? "لم تكتمل عملية الدفع" : "Payment Not Completed",
+        desc: language === "ar" ? "لم يتم خصم المبلغ ولم يتم تأكيد الطلب. يمكنك إعادة المحاولة في أي وقت." : "Your card payment was not completed. You can try again or place a new order.",
+        icon: <AlertTriangle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 dark:text-red-400" />,
+        iconBox: "bg-red-500/20 text-red-500 border-red-500/40 shadow-[0_0_50px_rgba(239,68,68,0.2)]",
+      };
+    }
+    if (isCardPending) {
+      return {
+        badge: language === "ar" ? "قيد انتظار السداد الإلكتروني" : "PAYMENT PENDING",
+        title: language === "ar" ? "في انتظار تأكيد الدفع" : "Awaiting Payment Confirmation",
+        desc: language === "ar" ? "تم تسجيل طلبك ونحن في انتظار تأكيد السداد للبدء في التجهيز." : "Your order is placed and awaiting card payment confirmation to begin processing.",
+        icon: <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-[#D4A017]" />,
+        iconBox: "bg-[#D4A017]/20 text-[#D4A017] border-[#D4A017]/40 shadow-[0_0_50px_rgba(212,160,23,0.2)]",
+      };
+    }
+    if (orderStatus === "Delivered") {
+      return {
+        badge: language === "ar" ? "تم التوصيل بنجاح" : "ORDER DELIVERED",
+        title: language === "ar" ? "تم تسليم طلبك بنجاح!" : "Order Delivered Successfully!",
+        desc: language === "ar" ? "شكراً لاختيارك نجم ستور. نتمنى لك تجربة قيادة ممتازة." : "Thank you for choosing Negm Store. We hope you enjoy our quality auto parts.",
+        icon: <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-500 dark:text-emerald-400" />,
+        iconBox: "bg-emerald-500/20 text-emerald-500 border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)]",
+      };
+    }
+    if (orderStatus === "Shipped") {
+      return {
+        badge: language === "ar" ? "الطلب في الطريق إليك" : "ORDER IN TRANSIT",
+        title: language === "ar" ? "طلبك في طريقه إليك!" : "Your Order Is On Its Way!",
+        desc: language === "ar" ? "تم شحن طلبك وهو الآن مع مندوب الشحن في الطريق إلى عنوانك." : "Your order has been dispatched and is currently in transit to your address.",
+        icon: <Truck className="h-10 w-10 sm:h-12 sm:w-12 text-blue-500 dark:text-blue-400" />,
+        iconBox: "bg-blue-500/20 text-blue-500 border-blue-500/40 shadow-[0_0_50px_rgba(59,130,246,0.2)]",
+      };
+    }
+    return {
+      badge: language === "ar" ? "تم تأكيد طلبك وجاري التجهيز" : "ORDER CONFIRMED & IN PROCESS",
+      title: language === "ar" ? "شكراً لاختيارك نجم ستور!" : "Thank You For Your Order!",
+      desc: language === "ar" ? "تم استلام وتأكيد طلبك بنجاح وجاري تجهيز المنتجات للشحن والتوصيل." : "Your order has been confirmed and is being prepared for dispatch and delivery.",
+      icon: <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-500 dark:text-emerald-400" />,
+      iconBox: "bg-emerald-500/20 text-emerald-500 border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)]",
+    };
+  };
+
+  const headerContent = getHeaderContent();
 
   // Dynamic Total Label
   const getTotalLabel = () => {
@@ -233,7 +278,6 @@ export default function OrderSuccessPage() {
   const getPaymentMethodDisplay = () => {
     if (paymentMethod === "cod") return language === "ar" ? "الدفع عند الاستلام (COD)" : "Cash on Delivery (COD)";
     if (paymentMethod === "card") return language === "ar" ? "بطاقة دفع إلكتروني" : "Credit / Debit Card";
-    if (paymentMethod === "wallet") return language === "ar" ? "محفظة إلكترونية" : "Mobile Wallet";
     return paymentMethod;
   };
 
@@ -247,22 +291,20 @@ export default function OrderSuccessPage() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           className="rounded-3xl border border-slate-200 dark:border-[#D4A017]/40 bg-white dark:bg-[#1B1B1B] p-6 sm:p-12 backdrop-blur-2xl shadow-xl dark:shadow-2xl text-center space-y-6 sm:space-y-8"
         >
-          {/* Victory Icon */}
-          <div className="relative mx-auto flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
-            <CheckCircle2 className="h-10 w-10 sm:h-12 sm:w-12" />
+          {/* Status Icon */}
+          <div className={`relative mx-auto flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full border ${headerContent.iconBox}`}>
+            {headerContent.icon}
           </div>
 
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-[#D4A017]">
-              {language === "ar" ? "تم تأكيد طلبك وجاري التجهيز" : "ORDER CONFIRMED & IN PROCESS"}
+              {headerContent.badge}
             </span>
             <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mt-1">
-              {language === "ar" ? "شكراً لاختيارك نجم ستور!" : "Thank You For Your Order!"}
+              {headerContent.title}
             </h1>
             <p className="text-sm text-slate-600 dark:text-gray-300 mt-2 max-w-md mx-auto">
-              {language === "ar"
-                ? "تم استلام طلبك بنجاح وجاري تجهيز المنتجات من مستودعنا الرئيسي في القاهرة الجديدة."
-                : "Your order has been received and is being prepared by our central warehouse team in New Cairo."}
+              {headerContent.desc}
             </p>
           </div>
 
@@ -271,7 +313,7 @@ export default function OrderSuccessPage() {
             <div className="rounded-2xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] p-4 sm:p-6 text-left rtl:text-right space-y-6">
               
               {/* Order Metadata Row */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-slate-200 dark:border-[#2D2D2D] pb-4 text-xs">
                 <div>
                   <span className="text-slate-500 dark:text-gray-400 block mb-0.5">
                     {language === "ar" ? "رقم الطلب:" : "Order Number:"}
@@ -294,15 +336,6 @@ export default function OrderSuccessPage() {
                   </span>
                   <div className="font-bold text-emerald-600 dark:text-emerald-400">
                     {order.estimatedDelivery || (language === "ar" ? "يحدد لاحقاً" : "To be confirmed")}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-slate-500 dark:text-gray-400 block mb-0.5">
-                    {language === "ar" ? "رمز التتبع:" : "Tracking Code:"}
-                  </span>
-                  <div className="font-mono font-bold text-slate-700 dark:text-gray-300">
-                    {order.trackingNumber || (language === "ar" ? "قيد التخصيص" : "To be assigned")}
                   </div>
                 </div>
               </div>

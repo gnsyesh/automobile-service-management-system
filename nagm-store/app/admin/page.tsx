@@ -62,7 +62,6 @@ import {
   getCustomerInsights,
   CustomerInsights,
 } from "@/lib/analytics";
-import { syncProductSalesFromOrders } from "@/lib/sales";
 
 export default function AdminDashboardPage() {
   const { t, language } = useLanguage();
@@ -197,13 +196,6 @@ export default function AdminDashboardPage() {
       }
 
       setLastUpdated(new Date());
-
-      // 4. Synchronize / reconcile productSales for homepage Best Sellers
-      if (fetchedOrders.length > 0) {
-        syncProductSalesFromOrders(fetchedOrders).catch((syncErr) => {
-          console.warn("Could not sync product sales in admin:", syncErr);
-        });
-      }
     } catch (e) {
       console.error("Error fetching admin dashboard data:", e);
     } finally {
@@ -1344,11 +1336,6 @@ export default function AdminDashboardPage() {
                 ? "تعديل نسب الخصم الترويجية النشطة للمتجر؛ يتم تطبيق التعديلات فوراً على البطاقات وعند حساب الدفع"
                 : "Manage live promotional discount percentages; updates apply instantly to homepage cards and checkout calculations"}
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-gray-400">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{language === "ar" ? "متزامن في الوقت الفعلي" : "Live Real-Time Sync"}</span>
           </div>
         </div>
 

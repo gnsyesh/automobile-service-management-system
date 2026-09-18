@@ -153,7 +153,6 @@ export default function ProfilePage() {
 
     const fetchUserOrders = async () => {
       setOrdersLoading(true);
-      const historyKey = `negm_orders_history_${user.uid}`;
       try {
         const q = query(collection(db, "orders"), where("userId", "==", user.uid));
         const snap = await getDocs(q);
@@ -162,31 +161,17 @@ export default function ProfilePage() {
           list.push({ id: d.id, ...(d.data() as any) });
         });
 
-        // Sort orders descending by date if available
-        list.sort((a, b) => new Date(b.orderDate || 0).getTime() - new Date(a.orderDate || 0).getTime());
+        // Sort orders descending by createdAt (canonical), fallback to legacy orderDate
+        list.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.orderDate || 0).getTime();
+          const timeB = new Date(b.createdAt || b.orderDate || 0).getTime();
+          return timeB - timeA;
+        });
 
-        if (list.length > 0) {
-          setOrders(list);
-          try {
-            localStorage.setItem(historyKey, JSON.stringify(list));
-            if (localStorage.getItem("negm_orders_history")) localStorage.removeItem("negm_orders_history");
-          } catch {}
-        } else {
-          // Fallback to locally cached history strictly for current user
-          const localOrders = JSON.parse(localStorage.getItem(historyKey) || "[]");
-          const userLocalOrders = localOrders.filter((o: Order) => o && o.userId === user.uid);
-          setOrders(userLocalOrders);
-        }
+        setOrders(list);
       } catch (err) {
         console.error("Error fetching orders:", err);
-        // Fallback to local storage strictly for current user
-        try {
-          const localOrders = JSON.parse(localStorage.getItem(historyKey) || "[]");
-          const userLocalOrders = localOrders.filter((o: Order) => o && o.userId === user.uid);
-          setOrders(userLocalOrders);
-        } catch {
-          setOrders([]);
-        }
+        setOrders([]);
       } finally {
         setOrdersLoading(false);
       }
@@ -384,8 +369,8 @@ export default function ProfilePage() {
                     System Administrator
                   </span>
                 ) : (
-                  <span className="rounded-full bg-[#D4A017] px-2.5 py-0.5 text-[10px] font-black uppercase text-black">
-                    VIP Member
+                  <span className="rounded-full bg-slate-200 dark:bg-[#252525] border border-slate-300 dark:border-[#333333] px-2.5 py-0.5 text-[10px] font-bold uppercase text-slate-700 dark:text-gray-300">
+                    {language === "ar" ? "حساب عميل" : "Member Account"}
                   </span>
                 )}
               </div>
@@ -529,31 +514,52 @@ export default function ProfilePage() {
                           </span>
                         </div>
 
-                        <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-                            ord.status === "Delivered"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                              : ord.status === "Cancelled"
-                              ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
-                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                          }`}
-                        >
-                          {ord.status === "Delivered" ? (
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                          ) : (
-                            <Clock className="h-3.5 w-3.5" />
-                          )}
-                          {t(`status.${ord.status.toLowerCase()}` as any) || ord.status}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                              (ord.status || ord.orderStatus) === "Delivered"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                                : (ord.status || ord.orderStatus) === "Cancelled"
+                                ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
+                                : (ord.status || ord.orderStatus) === "Shipped"
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            }`}
+                          >
+                            {(ord.status || ord.orderStatus) === "Delivered" ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Clock className="h-3.5 w-3.5" />
+                            )}
+                            {t(`status.${((ord.status || ord.orderStatus) || "processing").toLowerCase()}` as any) || ord.status || ord.orderStatus}
+                          </span>
+
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                              ord.paymentStatus === "paid"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                                : ord.paymentStatus === "failed"
+                                ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
+                                : ord.paymentMethod === "cod"
+                                ? "bg-amber-500/10 text-amber-700 dark:text-[#D4A017] border border-amber-500/30"
+                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                            }`}
+                          >
+                            {ord.paymentStatus === "paid"
+                              ? (language === "ar" ? "تم الدفع" : "Paid")
+                              : ord.paymentStatus === "failed"
+                              ? (language === "ar" ? "فشل الدفع" : "Payment Failed")
+                              : ord.paymentMethod === "cod"
+                              ? (language === "ar" ? "عند الاستلام" : "Due on Delivery")
+                              : (language === "ar" ? "بانتظار الدفع" : "Payment Pending")}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700 dark:text-gray-300">
                         <div>
                           <div>
                             {t("profile.recipient")} {ord.shippingAddress?.fullName || displayName}
-                          </div>
-                          <div className="text-slate-500 dark:text-gray-400 mt-0.5">
-                            {t("profile.tracking")} {ord.trackingNumber || ord.id}
                           </div>
                           {ord.items && ord.items.length > 0 && (
                             <div className="text-slate-500 dark:text-gray-400 mt-1">
@@ -563,7 +569,13 @@ export default function ProfilePage() {
                         </div>
                         <div className="sm:text-right rtl:sm:text-left flex flex-col sm:items-end gap-2">
                           <div>
-                            <div className="text-slate-500 dark:text-gray-400">{t("profile.totalPaid")}</div>
+                            <div className="text-slate-500 dark:text-gray-400">
+                              {ord.paymentStatus === "paid"
+                                ? (language === "ar" ? "المبلغ المدفوع" : "Total Paid")
+                                : (ord.status || ord.orderStatus) === "Cancelled"
+                                ? (language === "ar" ? "إجمالي الطلب (ملغي)" : "Order Total (Cancelled)")
+                                : (language === "ar" ? "إجمالي الطلب" : "Total Amount")}
+                            </div>
                             <div className="text-lg font-black text-slate-900 dark:text-white">
                               {ord.total.toLocaleString()}{" "}
                               <span className="text-xs text-[#D4A017]">EGP</span>
@@ -770,6 +782,18 @@ export default function ProfilePage() {
                           className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
                         />
                       </div>
+                      <div>
+                        <label className="text-slate-700 dark:text-gray-300 font-semibold block mb-1">
+                          {language === "ar" ? "الشقة / الطابق" : "Apartment / Floor"}
+                        </label>
+                        <input
+                          type="text"
+                          value={addressForm.apartment}
+                          onChange={(e) => setAddressForm({ ...addressForm, apartment: e.target.value })}
+                          placeholder={language === "ar" ? "شقة 4، الدور 2 (اختياري)" : "Apt 4, 2nd floor (optional)"}
+                          className="w-full p-3 rounded-xl border border-slate-200 dark:border-[#2D2D2D] bg-slate-50 dark:bg-[#111111] text-slate-900 dark:text-white focus:outline-none focus:border-[#D4A017]"
+                        />
+                      </div>
                     </div>
                     <button
                       type="submit"
@@ -794,7 +818,8 @@ export default function ProfilePage() {
                       {userProfile.shippingAddress.fullName || displayName}
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-gray-300">
-                      {userProfile.shippingAddress.building},{" "}
+                      {userProfile.shippingAddress.building}
+                      {userProfile.shippingAddress.apartment ? `, ${userProfile.shippingAddress.apartment}` : ""},{" "}
                       {userProfile.shippingAddress.street},{" "}
                       {userProfile.shippingAddress.city},{" "}
                       {userProfile.shippingAddress.governorate}

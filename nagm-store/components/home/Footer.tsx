@@ -112,9 +112,6 @@ export default function Footer() {
             <div className="flex items-center gap-2 text-[#D4A017] font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
               <span>Visa / Mastercard</span>
             </div>
-            <div className="flex items-center gap-2 text-red-400 font-bold bg-slate-800 dark:bg-[#1B1B1B] px-3 py-1.5 rounded-lg border border-slate-700 dark:border-[#2D2D2D]">
-              <span>Vodafone Cash</span>
-            </div>
           </div>
         </div>
 
